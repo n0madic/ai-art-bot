@@ -1,0 +1,5 @@
+test*
+.env
+*.png
+*.pth
+*.pyc

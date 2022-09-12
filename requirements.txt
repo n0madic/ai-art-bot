@@ -1,0 +1,6 @@
+diffusers
+ftfy
+realesrgan
+requests
+scipy
+transformers

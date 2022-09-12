@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  ai-art-bot:
+    image: ai-art-bot
+    build: .
+    volumes:
+      - ./prompt.json:/app/prompt.json
+      - huggingface:/root/.cache/huggingface
+    env_file:
+      - .env
+    command: python3 app.py
+    restart: unless-stopped
+
+volumes:
+  huggingface:
