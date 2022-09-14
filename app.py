@@ -15,14 +15,14 @@ sleep_time = float(os.getenv('SLEEP_TIME', 60))
 telegram_token = os.getenv('TELEGRAM_TOKEN')
 telegram_admin_id = int(os.getenv('TELEGRAM_ADMIN_ID', 0))
 telegram_chat_id = int(os.getenv('TELEGRAM_CHAT_ID'))
-bot = telebot.TeleBot(telegram_token, parse_mode='MarkdownV2')
+bot = telebot.TeleBot(telegram_token, parse_mode='HTML')
 bot.add_custom_filter(telebot.custom_filters.ChatFilter())
 worker_queue = queue.Queue()
 
 
-@bot.message_handler(chat_id=[telegram_admin_id], commands=['start'])
+@bot.message_handler(chat_id=[telegram_admin_id], commands=['start', 'help'])
 def start(message):
-    bot.send_message(message.chat.id, 'Just type the text prompt for image generation')
+    bot.send_message(message.chat.id, 'Just type the text prompt for image generation\n\nUse the <code>+</code> symbol at the end of the query to expand it with random data, for example:\n<code>cat+</code>')
 
 
 @bot.message_handler(chat_id=[telegram_admin_id])
@@ -32,7 +32,7 @@ def command_generate(message):
         bot.send_message(message.chat.id, 'Please provide a prompt')
     else:
         worker_queue.put(prompt)
-        bot.send_message(message.chat.id, 'Put prompt `{}` in queue: {}'.format(prompt, worker_queue.qsize()))
+        bot.send_message(message.chat.id, 'Put prompt <code>{}</code> in queue: {}'.format(prompt, worker_queue.qsize()))
 
 
 def main_loop():
@@ -41,6 +41,8 @@ def main_loop():
         if not command_only_mode and worker_queue.empty():
             worker_queue.put(prompt.get_prompt())
         random_prompt = worker_queue.get()
+        if random_prompt.endswith('+'):
+            random_prompt = prompt.get_prompt(random_prompt.removesuffix('+'))
         logging.info('Generating image for prompt: {}'.format(random_prompt))
         try:
             images = diffusion.generate(random_prompt)
@@ -72,11 +74,14 @@ if __name__ == '__main__':
     logging.info('Starting bot with username: {}'.format(user.username))
     if len(sys.argv) > 1:
         worker_queue.put(sys.argv[1])
-    threading.Thread(target=main_loop, daemon=True).start()
-    if command_only_mode:
-        if telegram_admin_id == 0:
+    if telegram_admin_id > 0:
+        threading.Thread(target=main_loop, daemon=True).start()
+        if command_only_mode:
+            logging.info('Command only mode enabled')
+        bot.infinity_polling()
+    else:
+        if command_only_mode:
             logging.error('Command only mode is enabled, but no admin ID is provided')
             sys.exit(1)
-        logging.info('Command only mode enabled')
-    bot.infinity_polling()
+        main_loop()
     logging.info('Bot stopped')

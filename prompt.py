@@ -13,18 +13,21 @@ def get_random_string(list, probability=1.0, count=1):
     return result
 
 
-def get_prompt():
+def get_prompt(init_prompt=''):
     with open('prompt.json') as f:
         keywords = json.load(f)
     generated = []
-    if len(keywords['Prompts']) == len(used_prompts):
-        used_prompts.clear()
-    while True:
-        general_prompt = get_random_string(keywords['Prompts'])[0]
-        if not general_prompt in used_prompts:
-            generated.append(general_prompt)
-            used_prompts.append(general_prompt)
-            break
+    if init_prompt:
+        generated.append(init_prompt.strip().removesuffix(','))
+    else:
+        if len(keywords['Prompts']) == len(used_prompts):
+            used_prompts.clear()
+        while True:
+            general_prompt = get_random_string(keywords['Prompts'])[0]
+            if not general_prompt in used_prompts:
+                generated.append(general_prompt)
+                used_prompts.append(general_prompt)
+                break
     generated.append('made by ' + ' and '.join(get_random_string(keywords['Artists'], count=3)))
     generated.extend(get_random_string(keywords['Lighting']))
     generated.extend(get_random_string(keywords['Style'], 0.9))
