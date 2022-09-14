@@ -4,43 +4,46 @@ import io
 import logging
 import os
 import prompt
-import requests
+import queue
 import sys
+import telebot
+import threading
 import time
 
 
+command_only_mode = os.getenv('COMMAND_ONLY_MODE', 'false').lower() == 'true'
 telegram_token = os.getenv('TELEGRAM_TOKEN')
-telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID')
+telegram_admin_id = int(os.getenv('TELEGRAM_ADMIN_ID'))
+telegram_chat_id = int(os.getenv('TELEGRAM_CHAT_ID'))
+bot = telebot.TeleBot(telegram_token, parse_mode='MarkdownV2')
+bot.add_custom_filter(telebot.custom_filters.ChatFilter())
+worker_queue = queue.Queue()
 
 
-def send_image_to_telegram(caption, image_data):
-    response = requests.post(
-        'https://api.telegram.org/bot{}/sendPhoto'.format(telegram_token),
-        data={
-            'chat_id': telegram_chat_id,
-            'caption': caption,
-        },
-        files={
-            'photo': io.BytesIO(image_data),
-        },
-    )
-
-    return response.json()
+@bot.message_handler(chat_id=[telegram_admin_id], commands=['start'])
+def start(message):
+    bot.send_message(message.chat.id, 'Just type the text prompt for image generation')
 
 
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+@bot.message_handler(chat_id=[telegram_admin_id])
+def command_generate(message):
+    prompt = message.text.strip()
+    if prompt == "":
+        bot.send_message(message.chat.id, 'Please provide a prompt')
+    else:
+        worker_queue.put(prompt)
+        bot.send_message(message.chat.id, 'Put prompt `{}` in queue: {}'.format(prompt, worker_queue.qsize()))
+
+
+def main_loop():
     logging.info('Used device: {}'.format(diffusion.device))
-    retry = False
     while True:
-        if len(sys.argv) > 1:
-            random_prompt = sys.argv[1]
-        elif not retry:
-            random_prompt = prompt.get_prompt()
+        if not command_only_mode and worker_queue.empty():
+            worker_queue.put(prompt.get_prompt())
+        random_prompt = worker_queue.get()
         logging.info('Generating image for prompt: {}'.format(random_prompt))
         try:
             images = diffusion.generate(random_prompt)
-            retry = False
             for image in images:
                 if enhancement.upscaling:
                     logging.info('Upscaling...')
@@ -48,16 +51,26 @@ if __name__ == '__main__':
                     if face_restore:
                         logging.info('Faces detected, restoring...')
                     image = enhancement.upscale(image, face_restore=face_restore)
-                with io.BytesIO() as output:
-                    image.save(output, format='PNG')
-                    byteImg = output.getvalue()
                 logging.info('Send image to Telegram...')
-                resp = send_image_to_telegram(random_prompt, byteImg)
-                if resp['ok']:
-                    logging.info("https://t.me/{}/{}".format(resp['result']['chat']['username'], resp['result']['message_id']))
+                resp = bot.send_photo(telegram_chat_id, photo=image, caption=random_prompt)
+                if resp.id:
+                    logging.info("https://t.me/{}/{}".format(resp.chat.username, resp.message_id))
                 else:
                     logging.error(resp)
         except Exception as e:
             logging.error(e)
-            retry = True
+            worker_queue.put(random_prompt)
+        else:
+            worker_queue.task_done()
         time.sleep(float(os.getenv('SLEEP_TIME', 60)))
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    user = bot.get_me()
+    logging.info('Starting bot with username: {}'.format(user.username))
+    if len(sys.argv) > 1:
+        worker_queue.put(sys.argv[1])
+    threading.Thread(target=main_loop, daemon=True).start()
+    bot.infinity_polling()
+    logging.info('Bot stopped')

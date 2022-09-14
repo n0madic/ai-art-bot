@@ -1,6 +1,6 @@
 diffusers
 ftfy
+pyTelegramBotAPI
 realesrgan
-requests
 scipy
 transformers
