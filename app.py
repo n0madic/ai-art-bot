@@ -12,6 +12,7 @@ import time
 
 
 command_only_mode = os.getenv('COMMAND_ONLY_MODE', 'false').lower() == 'true'
+sleep_time = float(os.getenv('SLEEP_TIME', 60))
 telegram_token = os.getenv('TELEGRAM_TOKEN')
 telegram_admin_id = int(os.getenv('TELEGRAM_ADMIN_ID'))
 telegram_chat_id = int(os.getenv('TELEGRAM_CHAT_ID'))
@@ -62,7 +63,8 @@ def main_loop():
             worker_queue.put(random_prompt)
         else:
             worker_queue.task_done()
-        time.sleep(float(os.getenv('SLEEP_TIME', 60)))
+        if not command_only_mode:
+            time.sleep(sleep_time)
 
 
 if __name__ == '__main__':
