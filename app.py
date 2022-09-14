@@ -1,6 +1,5 @@
 import diffusion
 import enhancement
-import io
 import logging
 import os
 import prompt
@@ -14,7 +13,7 @@ import time
 command_only_mode = os.getenv('COMMAND_ONLY_MODE', 'false').lower() == 'true'
 sleep_time = float(os.getenv('SLEEP_TIME', 60))
 telegram_token = os.getenv('TELEGRAM_TOKEN')
-telegram_admin_id = int(os.getenv('TELEGRAM_ADMIN_ID'))
+telegram_admin_id = int(os.getenv('TELEGRAM_ADMIN_ID', 0))
 telegram_chat_id = int(os.getenv('TELEGRAM_CHAT_ID'))
 bot = telebot.TeleBot(telegram_token, parse_mode='MarkdownV2')
 bot.add_custom_filter(telebot.custom_filters.ChatFilter())
@@ -74,5 +73,10 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         worker_queue.put(sys.argv[1])
     threading.Thread(target=main_loop, daemon=True).start()
+    if command_only_mode:
+        if telegram_admin_id == 0:
+            logging.error('Command only mode is enabled, but no admin ID is provided')
+            sys.exit(1)
+        logging.info('Command only mode enabled')
     bot.infinity_polling()
     logging.info('Bot stopped')
