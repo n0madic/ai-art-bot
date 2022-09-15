@@ -25,6 +25,21 @@ def start(message):
     bot.send_message(message.chat.id, 'Just type the text prompt for image generation\n\nUse the <code>+</code> symbol at the end of the query to expand it with random data, for example:\n<code>cat+</code>')
 
 
+@bot.message_handler(chat_id=[telegram_admin_id], commands=['chat'])
+def change_chat(message):
+    global telegram_chat_id
+    chat_id = message.text.split()[1]
+    if not chat_id.isdigit() and not chat_id.startswith('@'):
+        chat_id = '@' + chat_id
+    try:
+        resp = bot.get_chat(chat_id)
+    except telebot.apihelper.ApiException as e:
+        bot.send_message(message.chat.id, e)
+    else:
+        telegram_chat_id = chat_id
+        bot.send_message(message.chat.id, 'Chat changed on {}'.format(resp.title))
+
+
 @bot.message_handler(chat_id=[telegram_admin_id])
 def command_generate(message):
     prompt = message.text.strip()
@@ -71,11 +86,11 @@ def main_loop():
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
     user = bot.get_me()
-    logging.info('Starting bot with username: {}'.format(user.username))
     if len(sys.argv) > 1:
         worker_queue.put(sys.argv[1])
     if telegram_admin_id > 0:
         threading.Thread(target=main_loop, daemon=True).start()
+        logging.info('Starting bot with username: {}'.format(user.username))
         if command_only_mode:
             logging.info('Command only mode enabled')
         bot.infinity_polling()
