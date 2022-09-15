@@ -11,6 +11,13 @@ services:
       - .env
     command: python3 app.py
     restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+              - driver: nvidia
+                device_ids: ['0']
+                capabilities: [gpu]
 
 volumes:
   huggingface:
