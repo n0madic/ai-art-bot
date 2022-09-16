@@ -29,6 +29,14 @@ def start(message):
 def change_chat(message):
     global telegram_chat_id
     chat_id = message.text.split()[1]
+    if chat_id == '2me':
+        telegram_chat_id = message.chat.id
+        bot.send_message(message.chat.id, 'Target chat changed on this private chat')
+        return
+    elif chat_id == 'reset':
+        telegram_chat_id = int(os.getenv('TELEGRAM_CHAT_ID'))
+        bot.send_message(message.chat.id, 'Target chat changed on default chat')
+        return
     if not chat_id.isdigit() and not chat_id.startswith('@'):
         chat_id = '@' + chat_id
     try:
@@ -37,7 +45,7 @@ def change_chat(message):
         bot.send_message(message.chat.id, e)
     else:
         telegram_chat_id = chat_id
-        bot.send_message(message.chat.id, 'Chat changed on {}'.format(resp.title))
+        bot.send_message(message.chat.id, 'Target chat changed on {}'.format(resp.title))
 
 
 @bot.message_handler(chat_id=[telegram_admin_id])
