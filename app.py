@@ -98,6 +98,15 @@ def command_generate(message):
         bot.send_message(message.chat.id, 'Put prompt <code>{}</code> in queue: {}'.format(prompt, worker_queue.qsize()))
 
 
+@bot.message_handler(chat_id=cfg.telegram_admin_ids, content_types=['document'], func=lambda m: m.document.file_name == 'prompt.json')
+def handle_prompts_update(message):
+    file_info = bot.get_file(message.document.file_id)
+    downloaded_file = bot.download_file(file_info.file_path)
+    with open('prompt.json', 'wb') as f:
+        f.write(downloaded_file)
+    bot.send_message(message.chat.id, 'Prompts updated')
+
+
 def main_loop():
     while True:
         if not cfg.command_only_mode and worker_queue.empty():
