@@ -128,8 +128,6 @@ def main_loop():
         except Exception as e:
             logging.error(e)
             worker_queue.put(random_prompt)
-        else:
-            worker_queue.task_done()
         if not cfg.command_only_mode:
             time.sleep(cfg.sleep_time)
 
