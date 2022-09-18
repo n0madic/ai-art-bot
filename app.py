@@ -100,10 +100,7 @@ def command_generate(message):
 
 def main_loop():
     while True:
-        if cfg.command_only_mode:
-            time.sleep(1)
-            continue
-        if worker_queue.empty():
+        if not cfg.command_only_mode and worker_queue.empty():
             random_prompt = prompt.get_prompt()
         else:
             random_prompt = worker_queue.get()
