@@ -24,7 +24,7 @@ class Config:
                     if line and not line.startswith('#'):
                         key, value = line.split('=', 1)
                         os.putenv(key, value)
-        self.command_only_mode = os.getenv('COMMAND_ONLY_MODE', 'false').lower() == 'true'
+        self.command_only_mode = os.getenv('COMMAND_ONLY_MODE', 'false').lower() in ['true', 'on', 'yes', '1']
         self.sleep_time = float(os.getenv('SLEEP_TIME', 60))
         self.telegram_token = os.getenv('TELEGRAM_TOKEN')
         self.telegram_admin_ids = [int(i) for i in os.getenv('TELEGRAM_ADMIN_ID', '').split(',')]
