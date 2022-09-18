@@ -8,8 +8,14 @@ used_prompts = []
 def get_random_string(list, probability=1.0, count=1):
     result = []
     for _ in range(random.randint(1, count)):
+        # check duplicates
+        while True:
+            item = random.choice(list)
+            if not item in result:
+                break
+        # check probability
         if random.random() < probability:
-            result.append(random.choice(list))
+            result.append(item)
     return result
 
 
@@ -44,3 +50,8 @@ def get_prompt(init_prompt=''):
     generated.extend(get_random_string(keywords['Type'], 0.1))
     generated.extend(get_random_string(keywords['Modifiers'], count=8))
     return ', '.join([g for g in generated if g is not None])
+
+
+if __name__ == '__main__':
+    for _ in range(10):
+        print(get_prompt(), end='\n\n')
