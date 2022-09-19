@@ -112,12 +112,16 @@ def handle_prompts_update(message):
     bot.delete_message(message.chat.id, message.message_id)
 
 
-def main_loop():
+def prompt_worker():
     while True:
         if not cfg.command_only_mode and worker_queue.empty():
-            random_prompt = prompt.get_prompt()
-        else:
-            random_prompt = worker_queue.get()
+             worker_queue.put(prompt.get_prompt())
+        time.sleep(cfg.sleep_time)
+
+
+def main_loop():
+    while True:
+        random_prompt = worker_queue.get()
         if random_prompt.endswith('+'):
             random_prompt = prompt.get_prompt(random_prompt.removesuffix('+'))
         logging.info('Generating image for prompt: {}'.format(random_prompt))
@@ -139,8 +143,6 @@ def main_loop():
         except Exception as e:
             logging.error(e)
             worker_queue.put(random_prompt)
-        if not cfg.command_only_mode:
-            time.sleep(cfg.sleep_time)
 
 
 if __name__ == '__main__':
@@ -148,6 +150,7 @@ if __name__ == '__main__':
     user = bot.get_me()
     if len(sys.argv) > 1:
         worker_queue.put(sys.argv[1])
+    threading.Thread(target=prompt_worker, daemon=True).start()
     if len(cfg.telegram_admin_ids) > 0:
         threading.Thread(target=main_loop, daemon=True).start()
         logging.info('Starting bot with username: {}'.format(user.username))
