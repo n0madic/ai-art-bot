@@ -47,7 +47,6 @@ def get_prompt(init_prompt=''):
     generated.extend(get_random_string(keywords['Photography'], 0.2))
     generated.extend(get_random_string(keywords['Technique'], 0.1))
     generated.extend(get_random_string(keywords['Textures'], 0.1))
-    generated.extend(get_random_string(keywords['Type'], 0.1))
     generated.extend(get_random_string(keywords['Modifiers'], count=8))
     return ', '.join([g for g in generated if g is not None])
 

@@ -949,13 +949,6 @@
     "Paper texture",
     "Wood texture"
   ],
-  "Type": [
-    "Holographic",
-    "Infra-red",
-    "Night vision",
-    "Thermography",
-    "Ultraviolet"
-  ],
   "Modifiers": [
     "16-bit",
     "2D",
