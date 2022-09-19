@@ -27,7 +27,11 @@ class Config:
         self.command_only_mode = os.getenv('COMMAND_ONLY_MODE', 'false').lower() in ['true', 'on', 'yes', '1']
         self.sleep_time = float(os.getenv('SLEEP_TIME', 60))
         self.telegram_token = os.getenv('TELEGRAM_TOKEN')
-        self.telegram_admin_ids = [int(i) for i in os.getenv('TELEGRAM_ADMIN_ID', '').split(',')]
+        telegram_admin_id = os.getenv('TELEGRAM_ADMIN_ID')
+        if telegram_admin_id:
+            self.telegram_admin_ids = [int(i) for i in telegram_admin_id.split(',')]
+        else:
+            self.telegram_admin_ids = []
         self.telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID')
 
 
@@ -79,7 +83,7 @@ def change_sleep(message):
         bot.send_message(message.chat.id, 'Sleep time changed on default value')
         return
     cfg.sleep_time = float(sleep_text)
-    bot.send_message(message.chat.id, 'Sleep time changed on {} sec'.format(cfg.sleep_time))
+    bot.send_message(message.chat.id, 'Sleep time changed on {:0.0f} sec'.format(cfg.sleep_time))
 
 
 @bot.message_handler(chat_id=cfg.telegram_admin_ids, commands=['reset'])
