@@ -109,6 +109,7 @@ def handle_prompts_update(message):
     with open('prompt.json', 'wb') as f:
         f.write(downloaded_file)
     bot.send_message(message.chat.id, 'Prompts updated')
+    bot.delete_message(message.chat.id, message.message_id)
 
 
 def main_loop():
