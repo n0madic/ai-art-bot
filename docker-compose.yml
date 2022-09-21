@@ -5,7 +5,7 @@ services:
     image: ai-art-bot
     build: .
     volumes:
-      - ./prompt.json:/app/prompt.json
+      - ./ideas.txt:/app/ideas.txt
       - huggingface:/root/.cache/huggingface
     env_file:
       - .env

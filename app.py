@@ -4,6 +4,7 @@ import logging
 import os
 import prompt
 import queue
+import random
 import sys
 import telebot
 import threading
@@ -102,20 +103,20 @@ def command_generate(message):
         bot.send_message(message.chat.id, 'Put prompt <code>{}</code> in queue: {}'.format(prompt, worker_queue.qsize()))
 
 
-@bot.message_handler(chat_id=cfg.telegram_admin_ids, content_types=['document'], func=lambda m: m.document.file_name == 'prompt.json')
-def handle_prompts_update(message):
+@bot.message_handler(chat_id=cfg.telegram_admin_ids, content_types=['document'], func=lambda m: m.document.file_name == 'ideas.txt')
+def handle_ideas_update(message):
     file_info = bot.get_file(message.document.file_id)
     downloaded_file = bot.download_file(file_info.file_path)
-    with open('prompt.json', 'wb') as f:
+    with open('ideas.txt', 'wb') as f:
         f.write(downloaded_file)
-    bot.send_message(message.chat.id, 'Prompts updated')
+    bot.send_message(message.chat.id, 'Ideas updated')
     bot.delete_message(message.chat.id, message.message_id)
 
 
 def prompt_worker():
     while True:
         if not cfg.command_only_mode and worker_queue.empty():
-             worker_queue.put(prompt.get_prompt())
+             worker_queue.put(prompt.generate())
         time.sleep(cfg.sleep_time)
 
 
@@ -123,10 +124,13 @@ def main_loop():
     while True:
         random_prompt = worker_queue.get()
         if random_prompt.endswith('+'):
-            random_prompt = prompt.get_prompt(random_prompt.removesuffix('+'))
-        logging.info('Generating image for prompt: {}'.format(random_prompt))
+            random_prompt = prompt.generate(random_prompt.removesuffix('+'))
+        scale = round(random.uniform(7,10), 1)
+        seed = random.randint(0, 2**32 - 1)
+        steps = random.randint(30,100)
+        logging.info('Generating (seed={}, scale={}, steps={}) image for prompt: {}'.format(seed, scale, steps, random_prompt))
         try:
-            images = diffusion.generate(random_prompt)
+            images = diffusion.generate(random_prompt, seed=seed, steps=steps)
             for image in images:
                 if enhancement.upscaling:
                     logging.info('Upscaling...')
@@ -135,7 +139,8 @@ def main_loop():
                         logging.info('Faces detected, restoring...')
                     image = enhancement.upscale(image, face_restore=face_restore)
                 logging.info('Send image to Telegram...')
-                resp = bot.send_photo(cfg.telegram_chat_id, photo=image, caption=random_prompt)
+                message = '<code>{}</code>\nseed: <code>{}</code> | scale: <code>{}</code> | steps: <code>{}</code>'.format(random_prompt, seed, scale, steps)
+                resp = bot.send_photo(cfg.telegram_chat_id, photo=image, caption=message)
                 if resp.id:
                     logging.info("https://t.me/{}/{}".format(resp.chat.username, resp.message_id))
                 else:

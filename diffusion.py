@@ -10,8 +10,23 @@ pipe.safety_checker = lambda images, **kwargs: (images, False)
 pipe.to(device)
 
 
-def generate(prompt, count=1, cfg=7.5, steps=50):
-    images_list = pipe([prompt] * count, guidance_scale=cfg, num_inference_steps=steps)
+def generate(prompt, count=1, scale=7.5, steps=50, seed=None):
+    generator = torch.Generator(device=device).manual_seed(seed)
+    if device.type == 'cuda':
+        with torch.autocast('cuda'):
+            images_list = pipe(
+                [prompt] * count,
+                num_inference_steps=steps,
+                guidance_scale=scale,
+                generator=generator,
+            )
+    else:
+        images_list = pipe(
+            [prompt] * count,
+            num_inference_steps=steps,
+            guidance_scale=scale,
+            generator=generator,
+        )
     images = []
     for image in images_list["sample"]:
         images.append(image)
