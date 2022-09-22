@@ -13,6 +13,7 @@ Environment variables:
 * `UPSCALING` - up to 4x image resolution with [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) (default `true`)
 * `COMMAND_ONLY_MODE` - bot command mode only
 * `FACE_RESTORING` - restoring faces in an image with [GFPGAN](https://github.com/TencentARC/GFPGAN) (required enabled upscaling)
+* `RANDOM_PROMPT_PROBABILITY` - probability of generate full random prompt without ideas (default `0.2`)
 * `SLEEP_TIME` - how many seconds to sleep between generations (default 60s)
 
 ## Usage
