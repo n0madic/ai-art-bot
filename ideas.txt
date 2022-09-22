@@ -5,6 +5,7 @@ A dank swamp with thorny brambles
 A dream of a distant galaxy
 A harbor with a concrete dock and a storage facility
 A haunted house
+A house built of clay, twigs, stones and straw
 A person on a bike in a thunderstorm
 A Song of Ice and Fire
 Abandoned amusement park
@@ -57,6 +58,7 @@ Beautiful misty mountain landscape
 Beautiful mountain lake
 Bio monster
 Black hole
+Blizzard game art
 Block city
 Buildings on the shell of a giant turtle
 Bunch of people and cyborgs in a technologically advanced cityscape of the future
@@ -65,6 +67,7 @@ Burning house
 Burning house at sunset
 Burning house in the middle of a forest at night
 Call of Duty
+Camping bus in the beautiful mountains+
 Candy land
 Cargo train
 Carnivorous plant on alien planet
@@ -86,6 +89,10 @@ Coral reef
 Coral tropical atoll
 Cottage in the forest
 Countryside with a farmhouse and a barn
+Creepy
+Creepy forest
+Creepy forest at night
+Creepy forest with a full moon
 Creepy motel
 Creepy old house
 Cthulhu
@@ -105,13 +112,17 @@ Desert ghost town
 Desert sunrise
 Desolate wasteland
 Detailed portrait
+Diablo
 Dinosaur
 Dirty monster truck
+Disaster in the tunnel
 Distant galaxy
+Edge of Tomorrow
 Elven princess
 Epic battle
 Eternity
 Ethernal tresculpture
+Exosuit
 Extraterrestrial civilization
 Extraterrestrial civilization conquers space
 Extraterrestrial landscape
@@ -163,19 +174,25 @@ Grand canyon at sunset
 Grand canyon with a river
 Hell
 Hell on earth
+Hellboy
 Hellish landscape
 High epic architecture
 Highly detailed portrait
 Hobbit village
 Hooded alien creature
 Hooded figure
+Horizon Zero Dawn
 Horror
 Horror movie
-Horizon Zero Dawn
+House on wheels
+Huge hole in the ground
 Huge iceberg in the ocean
 Huge monolith
+Huge monster
+Huge monster destroying a city
 Humanoid robot
 Humans in hill
+Hut inside the mountains valley
 Ice planet
 In a galaxy far, far away
 Incredibly monster
@@ -220,8 +237,6 @@ Modern mansion
 Modern office building
 Modern skyscraper
 Monolith in the desert
-Moon base
-Moon colony
 Morning in a pine forest
 Mount Olympus at dawn
 Mountain landscape
@@ -297,6 +312,7 @@ Retro arcade
 Retro diner
 River in the jungle
 Robot warrior in epic battle
+Robotic
 Scientific illustration
 Sea monster
 Secret flower garden
@@ -306,10 +322,12 @@ Skull
 Small town surrounded by mountains
 Snow globe
 Space base on an asteroid
+Space base on Moon
 Space monster
 Space station in orbit
 Spaceship in a hangar
 Sparse woods
+Starcraft
 Starship entering hyperspace
 Starship interior
 Starship lands on the surface of the planet
@@ -330,6 +348,9 @@ The angel of death
 The cinematic composition
 The end of the world
 The entrance to the underworld
+The floating island
+The flying island
+The flying object
 The forest of the dead
 The last man on earth
 The Last of Us
@@ -382,7 +403,6 @@ Waterfall and mountains
 Waterfall in a tropical forest
 Waterfall in the mountains
 Waterfall in the mountains at sunset
-Waterfall with a rainbow
 Waterfall with a rainbow in the mountains
 Waterworld
 Werewolf
