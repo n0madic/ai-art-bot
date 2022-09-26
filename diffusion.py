@@ -15,26 +15,21 @@ def generate(prompt, count=1, scale=7.5, steps=50, seed=None):
     generator = torch.Generator(device=device).manual_seed(seed)
     if device.type == 'cuda':
         with torch.autocast('cuda'):
-            images_list = pipe(
+            return pipe(
                 [prompt] * count,
                 num_inference_steps=steps,
                 guidance_scale=scale,
                 generator=generator,
                 scheduler=scheduler
-            )
+            ).images
     else:
-        images_list = pipe(
+        return pipe(
             [prompt] * count,
             num_inference_steps=steps,
             guidance_scale=scale,
             generator=generator,
             scheduler=scheduler
-        )
-    images = []
-    for image in images_list["sample"]:
-        images.append(image)
-
-    return images
+        ).images
 
 
 if __name__ == "__main__":
