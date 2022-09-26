@@ -1,3 +1,4 @@
+import dataclasses
 import diffusion
 import enhancement
 import logging
@@ -34,6 +35,15 @@ class Config:
         else:
             self.telegram_admin_ids = []
         self.telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID')
+
+
+@dataclasses.dataclass
+class Job:
+    prompt: str
+    target_chat: str
+    seed: int = 0
+    scale: float = 0
+    steps: int = 0
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
@@ -99,7 +109,7 @@ def command_generate(message):
     if prompt == "":
         bot.send_message(message.chat.id, 'Please provide a prompt')
     else:
-        worker_queue.put(prompt)
+        worker_queue.put(Job(prompt, message.chat.id))
         bot.send_message(message.chat.id, 'Put prompt <code>{}</code> in queue: {}'.format(prompt, worker_queue.qsize()))
 
 
@@ -116,21 +126,24 @@ def handle_ideas_update(message):
 def prompt_worker():
     while True:
         if not cfg.command_only_mode and worker_queue.empty():
-             worker_queue.put(prompt.generate())
+             worker_queue.put(Job(prompt.generate(), cfg.telegram_chat_id))
         time.sleep(cfg.sleep_time)
 
 
 def main_loop():
     while True:
-        random_prompt = worker_queue.get()
-        if random_prompt.endswith('+'):
-            random_prompt = prompt.generate(random_prompt.removesuffix('+'))
-        scale = round(random.uniform(7,10), 1)
-        seed = random.randint(0, 2**32 - 1)
-        steps = random.randint(30,100)
-        logging.info('Generating (seed={}, scale={}, steps={}) image for prompt: {}'.format(seed, scale, steps, random_prompt))
+        job = worker_queue.get()
+        if job.prompt.endswith('+'):
+            job.prompt = prompt.generate(job.prompt.removesuffix('+'))
+        if job.scale == 0:
+            job.scale = round(random.uniform(7,10), 1)
+        if job.seed == 0:
+            job.seed = random.randint(0, 2**32 - 1)
+        if job.steps == 0:
+            job.steps = random.randint(30,100)
+        logging.info('Generating (seed={}, scale={}, steps={}) image for prompt: {}'.format(job.seed, job.scale, job.steps, job.prompt))
         try:
-            images = diffusion.generate(random_prompt, seed=seed, steps=steps)
+            images = diffusion.generate(job.prompt, seed=job.seed, steps=job.steps)
             for image in images:
                 if enhancement.upscaling:
                     logging.info('Upscaling...')
@@ -139,22 +152,22 @@ def main_loop():
                         logging.info('Faces detected, restoring...')
                     image = enhancement.upscale(image, face_restore=face_restore)
                 logging.info('Send image to Telegram...')
-                message = '<code>{}</code>\nseed: <code>{}</code> | scale: <code>{}</code> | steps: <code>{}</code>'.format(random_prompt, seed, scale, steps)
-                resp = bot.send_photo(cfg.telegram_chat_id, photo=image, caption=message)
+                message = '<code>{}</code>\nseed: <code>{}</code> | scale: <code>{}</code> | steps: <code>{}</code>'.format(job.prompt, job.seed, job.scale, job.steps)
+                resp = bot.send_photo(job.target_chat, photo=image, caption=message)
                 if resp.id:
                     logging.info("https://t.me/{}/{}".format(resp.chat.username, resp.message_id))
                 else:
                     logging.error(resp)
         except Exception as e:
             logging.error(e)
-            worker_queue.put(random_prompt)
+            worker_queue.put(job)
 
 
 if __name__ == '__main__':
     logging.info('Used device: {}'.format(diffusion.device))
     user = bot.get_me()
     if len(sys.argv) > 1:
-        worker_queue.put(sys.argv[1])
+        worker_queue.put(Job(sys.argv[1], cfg.telegram_chat_id))
     threading.Thread(target=prompt_worker, daemon=True).start()
     if len(cfg.telegram_admin_ids) > 0:
         threading.Thread(target=main_loop, daemon=True).start()
