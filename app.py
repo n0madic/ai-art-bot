@@ -25,7 +25,7 @@ class Config:
                     line = line.strip()
                     if line and not line.startswith('#'):
                         key, value = line.split('=', 1)
-                        os.putenv(key, value)
+                        os.environ[key] = value
         self.command_only_mode = os.getenv('COMMAND_ONLY_MODE', 'false').lower() in ['true', 'on', 'yes', '1']
         self.sleep_time = float(os.getenv('SLEEP_TIME', 60))
         self.telegram_token = os.getenv('TELEGRAM_TOKEN')
@@ -44,6 +44,11 @@ class Job:
     seed: int = 0
     scale: float = 0
     steps: int = 0
+
+    def __post_init__(self):
+        self.seed = self.seed or random.randint(0, 2**32 - 1)
+        self.scale = self.scale or round(random.uniform(7,10), 1)
+        self.steps = self.steps or random.randint(30,100)
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
@@ -135,12 +140,6 @@ def main_loop():
         job = worker_queue.get()
         if job.prompt.endswith('+'):
             job.prompt = prompt.generate(job.prompt.removesuffix('+'))
-        if job.scale == 0:
-            job.scale = round(random.uniform(7,10), 1)
-        if job.seed == 0:
-            job.seed = random.randint(0, 2**32 - 1)
-        if job.steps == 0:
-            job.steps = random.randint(30,100)
         logging.info('Generating (seed={}, scale={}, steps={}) image for prompt: {}'.format(job.seed, job.scale, job.steps, job.prompt))
         try:
             images = diffusion.generate(job.prompt, seed=job.seed, steps=job.steps)
