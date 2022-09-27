@@ -18,6 +18,7 @@ import time
 class Job:
     prompt: str
     target_chat: str
+    count: int = 1
     seed: int = 0
     scale: float = 0
     steps: int = 0
@@ -121,12 +122,13 @@ def main_loop():
         job.prompt = job.prompt.strip()
         if job.prompt.endswith('+'):
             job.prompt = prompt.generate(job.prompt.removesuffix('+'))
+        job.count = params.get('count', job.count)
         job.seed = params.get('seed', job.seed)
         job.scale = params.get('scale', job.scale)
         job.steps = params.get('steps', job.steps)
-        logging.info('Generating (seed={}, scale={}, steps={}) image for prompt: {}'.format(job.seed, job.scale, job.steps, job.prompt))
+        logging.info('Generating (count={}, seed={}, scale={}, steps={}) image for prompt: {}'.format(job.count, job.seed, job.scale, job.steps, job.prompt))
         try:
-            images = diffusion.generate(job.prompt, seed=job.seed, steps=job.steps)
+            images = diffusion.generate(job.prompt, count=job.count, seed=job.seed, steps=job.steps)
             for image in images:
                 if enhancement.upscaling:
                     logging.info('Upscaling...')
