@@ -117,7 +117,8 @@ def command_generate(message):
             job = Job(prompt, message.chat.id)
             job.seed += i
             worker_queue.put(job)
-            bot.send_message(message.chat.id, 'Put prompt <code>{}</code> in queue: {}'.format(job.prompt, worker_queue.qsize()))
+            if prompt != job.prompt or i == loop - 1:
+                bot.send_message(message.chat.id, 'Put prompt <code>{}</code> in queue: {}'.format(job.prompt, worker_queue.qsize()))
 
 
 @bot.message_handler(chat_id=cfg.telegram_admin_ids, content_types=['document'], func=lambda m: m.document.file_name == 'ideas.txt')
