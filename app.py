@@ -100,7 +100,16 @@ def command_generate(message):
     if prompt == "":
         bot.send_message(message.chat.id, 'Please provide a prompt')
     else:
-        worker_queue.put(Job(prompt, message.chat.id))
+        loop = re.findall(r'loop=(\d+)', prompt)
+        if loop:
+            loop = int(loop[0])
+            prompt = re.sub(r'loop=(\d+)', '', prompt).strip()
+        else:
+            loop = 1
+        for i in range(loop):
+            job = Job(prompt, message.chat.id)
+            job.seed += i
+            worker_queue.put(job)
         bot.send_message(message.chat.id, 'Put prompt <code>{}</code> in queue: {}'.format(prompt, worker_queue.qsize()))
 
 
