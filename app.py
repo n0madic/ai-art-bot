@@ -12,6 +12,7 @@ import sys
 import telebot
 import threading
 import time
+import torch
 
 
 @dataclasses.dataclass
@@ -146,6 +147,12 @@ def main_loop():
         except IndexError as e:
             logging.error(e)
             job.steps += 1
+            worker_queue.put(job)
+        except RuntimeError as e:
+            logging.error(e)
+            torch.cuda.empty_cache()
+            if job.count > 1:
+                job.count -= 1
             worker_queue.put(job)
         except Exception as e:
             logging.error(e)
