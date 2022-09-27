@@ -29,7 +29,7 @@ class Job:
         self.prompt = re.sub(r'(\w+)=(\d+\.\d+)', lambda m: params.update({m.group(1): float(m.group(2))}) or '', self.prompt)
         self.prompt = re.sub(r'(\w+)=(\d+)', lambda m: params.update({m.group(1): int(m.group(2))}) or '', self.prompt)
         self.prompt = self.prompt.strip()
-        if self.prompt.endswith('+'):
+        if not self.prompt or self.prompt.endswith('+'):
             self.prompt = prompt.generate(self.prompt.removesuffix('+'))
         self.count = params.get('count', self.count)
         self.seed = params.get('seed', self.seed or random.randint(0, 2**32 - 1))
@@ -94,6 +94,13 @@ def change_sleep(message):
     bot.send_message(message.chat.id, 'Config reseted')
 
 
+@bot.message_handler(chat_id=cfg.telegram_admin_ids, commands=['random'])
+def random_generate(message):
+    job = Job('', message.chat.id)
+    bot.send_message(message.chat.id, 'Put random prompt <code>{}</code> in queue: {}'.format(job.prompt, worker_queue.qsize()))
+    worker_queue.put(job)
+
+
 @bot.message_handler(chat_id=cfg.telegram_admin_ids)
 def command_generate(message):
     prompt = message.text.strip()
@@ -110,7 +117,7 @@ def command_generate(message):
             job = Job(prompt, message.chat.id)
             job.seed += i
             worker_queue.put(job)
-        bot.send_message(message.chat.id, 'Put prompt <code>{}</code> in queue: {}'.format(prompt, worker_queue.qsize()))
+            bot.send_message(message.chat.id, 'Put prompt <code>{}</code> in queue: {}'.format(job.prompt, worker_queue.qsize()))
 
 
 @bot.message_handler(chat_id=cfg.telegram_admin_ids, content_types=['document'], func=lambda m: m.document.file_name == 'ideas.txt')
@@ -183,8 +190,10 @@ if __name__ == '__main__':
             telebot.types.BotCommand('command_mode', 'On/Off command only mode'),
             telebot.types.BotCommand('sleep', 'Change sleep time'),
             telebot.types.BotCommand('reset', 'Reset config'),
+            telebot.types.BotCommand('random', 'Generate random prompt'),
         ])
         bot.infinity_polling()
+        bot.delete_my_commands()
     else:
         if cfg.command_only_mode:
             logging.error('Command only mode is enabled, but no admin ID is provided')
