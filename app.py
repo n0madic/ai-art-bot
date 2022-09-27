@@ -25,9 +25,16 @@ class Job:
     steps: int = 0
 
     def __post_init__(self):
-        self.seed = self.seed or random.randint(0, 2**32 - 1)
-        self.scale = self.scale or round(random.uniform(7,10), 1)
-        self.steps = self.steps or random.randint(30,100)
+        params = {}
+        self.prompt = re.sub(r'(\w+)=(\d+\.\d+)', lambda m: params.update({m.group(1): float(m.group(2))}) or '', self.prompt)
+        self.prompt = re.sub(r'(\w+)=(\d+)', lambda m: params.update({m.group(1): int(m.group(2))}) or '', self.prompt)
+        self.prompt = self.prompt.strip()
+        if self.prompt.endswith('+'):
+            self.prompt = prompt.generate(self.prompt.removesuffix('+'))
+        self.count = params.get('count', self.count)
+        self.seed = params.get('seed', self.seed or random.randint(0, 2**32 - 1))
+        self.scale = params.get('scale', self.scale or round(random.uniform(7,10), 1))
+        self.steps = params.get('steps', self.steps or random.randint(30,100))
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
@@ -117,16 +124,6 @@ def prompt_worker():
 def main_loop():
     while True:
         job = worker_queue.get()
-        params = {}
-        job.prompt = re.sub(r'(\w+)=(\d+\.\d+)', lambda m: params.update({m.group(1): float(m.group(2))}) or '', job.prompt)
-        job.prompt = re.sub(r'(\w+)=(\d+)', lambda m: params.update({m.group(1): int(m.group(2))}) or '', job.prompt)
-        job.prompt = job.prompt.strip()
-        if job.prompt.endswith('+'):
-            job.prompt = prompt.generate(job.prompt.removesuffix('+'))
-        job.count = params.get('count', job.count)
-        job.seed = params.get('seed', job.seed)
-        job.scale = params.get('scale', job.scale)
-        job.steps = params.get('steps', job.steps)
         logging.info('Generating (count={}, seed={}, scale={}, steps={}) image for prompt: {}'.format(job.count, job.seed, job.scale, job.steps, job.prompt))
         try:
             images = diffusion.generate(job.prompt, count=job.count, seed=job.seed, steps=job.steps)
