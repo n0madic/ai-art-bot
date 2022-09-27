@@ -133,6 +133,10 @@ def main_loop():
                     logging.info("https://t.me/{}/{}".format(resp.chat.username, resp.message_id))
                 else:
                     logging.error(resp)
+        except IndexError as e:
+            logging.error(e)
+            job.steps += 1
+            worker_queue.put(job)
         except Exception as e:
             logging.error(e)
             worker_queue.put(job)
