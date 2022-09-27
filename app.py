@@ -5,6 +5,7 @@ import enhancement
 import logging
 import os
 import prompt
+import re
 import queue
 import random
 import sys
@@ -114,8 +115,15 @@ def prompt_worker():
 def main_loop():
     while True:
         job = worker_queue.get()
+        params = {}
+        job.prompt = re.sub(r'(\w+)=(\d+\.\d+)', lambda m: params.update({m.group(1): float(m.group(2))}) or '', job.prompt)
+        job.prompt = re.sub(r'(\w+)=(\d+)', lambda m: params.update({m.group(1): int(m.group(2))}) or '', job.prompt)
+        job.prompt = job.prompt.strip()
         if job.prompt.endswith('+'):
             job.prompt = prompt.generate(job.prompt.removesuffix('+'))
+        job.seed = params.get('seed', job.seed)
+        job.scale = params.get('scale', job.scale)
+        job.steps = params.get('steps', job.steps)
         logging.info('Generating (seed={}, scale={}, steps={}) image for prompt: {}'.format(job.seed, job.scale, job.steps, job.prompt))
         try:
             images = diffusion.generate(job.prompt, seed=job.seed, steps=job.steps)
