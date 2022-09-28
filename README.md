@@ -1,6 +1,6 @@
 # AI art bot
 
-The app generates random images using AI [Stable Diffusion](https://github.com/CompVis/stable-diffusion) and posts them in Telegram https://t.me/ai_art_random
+The app generates random images using AI [Stable Diffusion](https://github.com/CompVis/stable-diffusion) and posts them in Telegram https://t.me/ai_art_random and Instagram https://www.instagram.com/ai_art.random/
 
 ## Configuring
 
