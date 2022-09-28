@@ -2,6 +2,7 @@ import config
 import dataclasses
 import diffusion
 import enhancement
+import instagrapi
 import logging
 import os
 import prompt
@@ -9,6 +10,7 @@ import re
 import queue
 import random
 import sys
+import tempfile
 import telebot
 import threading
 import time
@@ -37,12 +39,32 @@ class Job:
         self.steps = params.get('steps', self.steps or random.randint(30,100))
 
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+logging.basicConfig(format='%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+bot_logger = logging.getLogger('bot')
+bot_logger.setLevel(logging.INFO)
+insta_logger = logging.getLogger('instagrapi')
+insta_logger.setLevel(logging.ERROR)
+
 cfg = config.cfg
 
 bot = telebot.TeleBot(cfg.telegram_token, parse_mode='HTML')
 bot.add_custom_filter(telebot.custom_filters.ChatFilter())
+
+insta = instagrapi.Client(logger=insta_logger)
+insta_logged = False
+
 worker_queue = queue.Queue()
+
+
+def intagram_login():
+    global insta_logged
+    while not insta_logged:
+        try:
+            insta_logged = insta.login(cfg.instagram_username, cfg.instagram_password)
+        except Exception as e:
+            bot_logger.error(e)
+            time.sleep(random.randint(60, 600))
+    bot_logger.info('Logged in Instagram as {}'.format(insta.username))
 
 
 @bot.message_handler(chat_id=cfg.telegram_admin_ids, commands=['start', 'help'])
@@ -141,49 +163,62 @@ def prompt_worker():
 def main_loop():
     while True:
         job = worker_queue.get()
-        logging.info('Generating (count={}, seed={}, scale={}, steps={}) image for prompt: {}'.format(job.count, job.seed, job.scale, job.steps, job.prompt))
+        bot_logger.info('Generating (count={}, seed={}, scale={}, steps={}) image for prompt: {}'.format(job.count, job.seed, job.scale, job.steps, job.prompt))
         try:
             images = diffusion.generate(job.prompt, count=job.count, seed=job.seed, steps=job.steps)
             for image in images:
                 if enhancement.upscaling:
-                    logging.info('Upscaling...')
+                    bot_logger.info('Upscaling...')
                     face_restore = enhancement.face_presence_detection(image)
                     if face_restore:
-                        logging.info('Faces detected, restoring...')
+                        bot_logger.info('Faces detected, restoring...')
                     image = enhancement.upscale(image, face_restore=face_restore)
-                logging.info('Send image to Telegram...')
+                bot_logger.info('Send image to Telegram...')
                 message = '<code>{}</code>\nseed: <code>{}</code> | scale: <code>{}</code> | steps: <code>{}</code>'.format(job.prompt, job.seed, job.scale, job.steps)
                 resp = bot.send_photo(job.target_chat, photo=image, caption=message)
                 if resp.id:
-                    logging.info("https://t.me/{}/{}".format(resp.chat.username, resp.message_id))
+                    bot_logger.info("https://t.me/{}/{}".format(resp.chat.username, resp.message_id))
                 else:
-                    logging.error(resp)
+                    bot_logger.error(resp)
+                if insta_logged:
+                    bot_logger.info('Send image to Instagram...')
+                    message = '{}\nseed: {} | scale: {} | steps: {}\n#aiart #stablediffusion'.format(job.prompt, job.seed, job.scale, job.steps)
+                    with tempfile.NamedTemporaryFile(suffix='.jpg') as f:
+                        image.save(f, format='JPEG')
+                        f.seek(0)
+                        resp = insta.photo_upload(f.name, caption=message)
+                        if resp.code:
+                            bot_logger.info("https://www.instagram.com/p/{}/".format(resp.code))
+                        else:
+                            bot_logger.error(resp)
         except IndexError as e:
-            logging.error(e)
+            bot_logger.error(e)
             job.steps += 1
             worker_queue.put(job)
         except RuntimeError as e:
-            logging.error(e)
+            bot_logger.error(e)
             torch.cuda.empty_cache()
             if job.count > 1:
                 job.count -= 1
             worker_queue.put(job)
         except Exception as e:
-            logging.error(e)
+            bot_logger.error(e)
             worker_queue.put(job)
 
 
 if __name__ == '__main__':
-    logging.info('Used device: {}'.format(diffusion.device))
+    bot_logger.info('Used device: {}'.format(diffusion.device))
     user = bot.get_me()
+    if cfg.instagram_username and cfg.instagram_password:
+        threading.Thread(target=intagram_login).start()
     if len(sys.argv) > 1:
         worker_queue.put(Job(sys.argv[1], cfg.telegram_chat_id))
     threading.Thread(target=prompt_worker, daemon=True).start()
     if len(cfg.telegram_admin_ids) > 0:
         threading.Thread(target=main_loop, daemon=True).start()
-        logging.info('Starting bot with username: {}'.format(user.username))
+        bot_logger.info('Starting bot with username: {}'.format(user.username))
         if cfg.command_only_mode:
-            logging.info('Command only mode enabled')
+            bot_logger.info('Command only mode enabled')
         bot.set_my_commands([
             telebot.types.BotCommand('start', 'Start the bot'),
             telebot.types.BotCommand('help', 'Show help message'),
@@ -197,7 +232,7 @@ if __name__ == '__main__':
         bot.delete_my_commands()
     else:
         if cfg.command_only_mode:
-            logging.error('Command only mode is enabled, but no admin ID is provided')
+            bot_logger.error('Command only mode is enabled, but no admin ID is provided')
             sys.exit(1)
         main_loop()
-    logging.info('Bot stopped')
+    bot_logger.info('Bot stopped')
