@@ -25,6 +25,9 @@ class Job:
     seed: int = 0
     scale: float = 0
     steps: int = 0
+    images: list = dataclasses.field(default_factory=list)
+    send_to_instagram: bool = False
+    send_to_telegram: bool = False
 
     def __post_init__(self):
         params = {}
@@ -164,46 +167,66 @@ def main_loop():
     while True:
         job = worker_queue.get()
         bot_logger.info('Generating (count={}, seed={}, scale={}, steps={}) image for prompt: {}'.format(job.count, job.seed, job.scale, job.steps, job.prompt))
-        try:
-            images = diffusion.generate(job.prompt, count=job.count, seed=job.seed, steps=job.steps)
-            for image in images:
-                if enhancement.upscaling:
-                    bot_logger.info('Upscaling...')
+        if len(job.images) == 0:
+            try:
+                job.images = diffusion.generate(job.prompt, count=job.count, seed=job.seed, steps=job.steps)
+            except IndexError as e:
+                bot_logger.error(e)
+                job.steps += 1
+                worker_queue.put(job)
+                continue
+            except RuntimeError as e:
+                bot_logger.error(e)
+                torch.cuda.empty_cache()
+                if job.count > 1:
+                    job.count -= 1
+                worker_queue.put(job)
+                continue
+            except Exception as e:
+                bot_logger.error(e)
+                worker_queue.put(job)
+                continue
+        for image in job.images:
+            if enhancement.upscaling:
+                bot_logger.info('Upscaling...')
+                try:
                     face_restore = enhancement.face_presence_detection(image)
                     if face_restore:
                         bot_logger.info('Faces detected, restoring...')
                     image = enhancement.upscale(image, face_restore=face_restore)
+                except Exception as e:
+                    bot_logger.error(e)
+            if not job.send_to_telegram:
                 bot_logger.info('Send image to Telegram...')
                 message = '<code>{}</code>\nseed: <code>{}</code> | scale: <code>{}</code> | steps: <code>{}</code>'.format(job.prompt, job.seed, job.scale, job.steps)
-                resp = bot.send_photo(job.target_chat, photo=image, caption=message)
-                if resp.id:
-                    bot_logger.info("https://t.me/{}/{}".format(resp.chat.username, resp.message_id))
+                try:
+                    resp = bot.send_photo(job.target_chat, photo=image, caption=message)
+                except Exception as e:
+                    bot_logger.error(e)
                 else:
-                    bot_logger.error(resp)
-                if insta_logged:
-                    bot_logger.info('Send image to Instagram...')
-                    message = '{}\nseed: {} | scale: {} | steps: {}\n#aiart #stablediffusion'.format(job.prompt, job.seed, job.scale, job.steps)
-                    with tempfile.NamedTemporaryFile(suffix='.jpg') as f:
-                        image.save(f, format='JPEG')
-                        f.seek(0)
+                    if resp.id:
+                        bot_logger.info("https://t.me/{}/{}".format(resp.chat.username, resp.message_id))
+                        job.send_to_telegram = True
+                    else:
+                        bot_logger.error(resp)
+            if insta_logged and not job.send_to_instagram and job.target_chat == cfg.telegram_chat_id:
+                bot_logger.info('Send image to Instagram...')
+                message = '{}\nseed: {} | scale: {} | steps: {}\n#aiart #stablediffusion'.format(job.prompt, job.seed, job.scale, job.steps)
+                with tempfile.NamedTemporaryFile(suffix='.jpg') as f:
+                    image.save(f, format='JPEG')
+                    f.seek(0)
+                    try:
                         resp = insta.photo_upload(f.name, caption=message)
+                    except Exception as e:
+                        bot_logger.error(e)
+                    else:
                         if resp.code:
                             bot_logger.info("https://www.instagram.com/p/{}/".format(resp.code))
+                            job.send_to_instagram = True
                         else:
                             bot_logger.error(resp)
-        except IndexError as e:
-            bot_logger.error(e)
-            job.steps += 1
-            worker_queue.put(job)
-        except RuntimeError as e:
-            bot_logger.error(e)
-            torch.cuda.empty_cache()
-            if job.count > 1:
-                job.count -= 1
-            worker_queue.put(job)
-        except Exception as e:
-            bot_logger.error(e)
-            worker_queue.put(job)
+            if job.target_chat == cfg.telegram_chat_id and (not job.send_to_telegram or not job.send_to_instagram):
+                worker_queue.put(job)
 
 
 if __name__ == '__main__':
