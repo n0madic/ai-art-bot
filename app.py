@@ -122,7 +122,7 @@ def change_sleep(message):
 @bot.message_handler(chat_id=cfg.telegram_admin_ids, commands=['random'])
 def random_generate(message):
     job = Job('', message.chat.id)
-    bot.send_message(message.chat.id, 'Put random prompt <code>{}</code> in queue: {}'.format(job.prompt, worker_queue.qsize()))
+    bot.send_message(message.chat.id, 'Put random prompt <code>{}</code> in queue: {}'.format(job.prompt, worker_queue.qsize()), disable_notification=True)
     worker_queue.put(job)
 
 
@@ -143,7 +143,7 @@ def command_generate(message):
             job.seed += i
             worker_queue.put(job)
             if prompt != job.prompt or i == loop - 1:
-                bot.send_message(message.chat.id, 'Put prompt <code>{}</code> in queue: {}'.format(job.prompt, worker_queue.qsize()))
+                bot.send_message(message.chat.id, 'Put prompt <code>{}</code> in queue: {}'.format(job.prompt, worker_queue.qsize()), disable_notification=True)
 
 
 @bot.message_handler(chat_id=cfg.telegram_admin_ids, content_types=['document'], func=lambda m: m.document.file_name == 'ideas.txt')
