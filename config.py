@@ -27,6 +27,7 @@ class Config:
         self.telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID')
         self.instagram_username = os.getenv('INSTAGRAM_USERNAME')
         self.instagram_password = os.getenv('INSTAGRAM_PASSWORD')
+        self.image_cache_dir = os.getenv('IMAGE_CACHE_DIR', 'imagecache')
 
 
 cfg = Config()

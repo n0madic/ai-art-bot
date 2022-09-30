@@ -10,7 +10,6 @@ import re
 import queue
 import random
 import sys
-import tempfile
 import telebot
 import threading
 import time
@@ -59,16 +58,49 @@ insta_logged = False
 
 worker_queue = queue.Queue()
 
+if not os.path.exists(cfg.image_cache_dir):
+    os.mkdir(cfg.image_cache_dir)
 
-def intagram_login():
+
+def clean_cache(age=86400, interval=3600):
+    for f in os.listdir(cfg.image_cache_dir):
+        if os.stat(os.path.join(cfg.image_cache_dir,f)).st_mtime < time.now - age:
+            os.remove(os.path.join(cfg.image_cache_dir,f))
+    threading.Timer(interval, clean_cache).start()
+
+
+def instagram_login():
     global insta_logged
+    attempt_count = 0
     while not insta_logged:
         try:
             insta_logged = insta.login(cfg.instagram_username, cfg.instagram_password)
         except Exception as e:
             bot_logger.error(e)
-            time.sleep(random.randint(60, 600))
+            attempt_count += 1
+            if attempt_count > 5:
+                attempt_count = 0
+                time.sleep(3600)
+            else:
+                time.sleep(random.randint(60, 600))
     bot_logger.info('Logged in Instagram as {}'.format(insta.username))
+
+
+def instagram_send(image_path, message):
+    if not insta_logged:
+        return False
+    bot_logger.info('Send image to Instagram...')
+    try:
+        resp = insta.photo_upload(image_path, caption=message)
+    except Exception as e:
+        bot_logger.error(e)
+    else:
+        if resp.code:
+            bot_logger.info("https://www.instagram.com/p/{}/".format(resp.code))
+            return True
+        else:
+            bot_logger.error(resp)
+    return False
 
 
 @bot.message_handler(chat_id=cfg.telegram_admin_ids, commands=['start', 'help'])
@@ -161,8 +193,24 @@ def handle_ideas_update(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
-    if call.data == 'post_to_channel':
-        bot.copy_message(cfg.telegram_chat_id, call.message.chat.id, call.message.message_id)
+    sended = False
+    if call.data == 'post_to_channel' or call.data == 'post_to_both':
+        try:
+            bot.copy_message(cfg.telegram_chat_id, call.message.chat.id, call.message.message_id)
+            bot.answer_callback_query(call.id, 'Posted to channel')
+        except Exception as e:
+            bot_logger.error(e)
+            bot.answer_callback_query(call.id, 'Error posting to channel')
+        else:
+            sended = True
+    if call.data == 'post_to_instagram' or call.data == 'post_to_both':
+        image_path = os.path.join(cfg.image_cache_dir, '{}.jpg'.format(call.message.message_id))
+        sended = instagram_send(image_path, call.message.caption + '\n#aiart #stablediffusion')
+        if sended:
+            bot.answer_callback_query(call.id, 'Posted to Instagram')
+        else:
+            bot.answer_callback_query(call.id, 'Error posting to Instagram')
+    if sended and call.data == 'post_to_both':
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
 
@@ -176,6 +224,7 @@ def prompt_worker():
 def main_loop():
     while True:
         job = worker_queue.get()
+        is_admin_chat = int(job.target_chat) in cfg.telegram_admin_ids
         bot_logger.info('Generating (count={}, seed={}, scale={}, steps={}) image for prompt: {}'.format(job.count, job.seed, job.scale, job.steps, job.prompt))
         if len(job.images) == 0:
             try:
@@ -206,11 +255,15 @@ def main_loop():
                     image = enhancement.upscale(image, face_restore=face_restore)
                 except Exception as e:
                     bot_logger.error(e)
+            image_path = None
             if not job.send_to_telegram:
                 markup = None
-                if not job.target_chat == cfg.telegram_chat_id:
+                if is_admin_chat:
                     markup = telebot.types.InlineKeyboardMarkup()
-                    markup.add(telebot.types.InlineKeyboardButton("Post to channel", callback_data="post_to_channel"))
+                    markup.add(telebot.types.InlineKeyboardButton("Post to channel", callback_data="post_to_channel"),
+                               telebot.types.InlineKeyboardButton("Post to Instagram", callback_data="post_to_instagram"),
+                               telebot.types.InlineKeyboardButton("Post to both", callback_data="post_to_both"),
+                               row_width=2)
                 bot_logger.info('Send image to Telegram...')
                 message = '<code>{}</code>\nseed: <code>{}</code> | scale: <code>{}</code> | steps: <code>{}</code>'.format(job.prompt, job.seed, job.scale, job.steps)
                 try:
@@ -221,25 +274,15 @@ def main_loop():
                     if resp.id:
                         bot_logger.info("https://t.me/{}/{}".format(resp.chat.username, resp.message_id))
                         job.send_to_telegram = True
+                        image_path = os.path.join(cfg.image_cache_dir, '{}.jpg'.format(resp.message_id))
+                        if not os.path.exists(image_path):
+                            image.save(image_path)
                     else:
                         bot_logger.error(resp)
-            if insta_logged and not job.send_to_instagram and job.target_chat == cfg.telegram_chat_id:
-                bot_logger.info('Send image to Instagram...')
+            if insta_logged and image_path and not job.send_to_instagram and not is_admin_chat:
                 message = '{}\nseed: {} | scale: {} | steps: {}\n#aiart #stablediffusion'.format(job.prompt, job.seed, job.scale, job.steps)
-                with tempfile.NamedTemporaryFile(suffix='.jpg') as f:
-                    image.save(f, format='JPEG')
-                    f.seek(0)
-                    try:
-                        resp = insta.photo_upload(f.name, caption=message)
-                    except Exception as e:
-                        bot_logger.error(e)
-                    else:
-                        if resp.code:
-                            bot_logger.info("https://www.instagram.com/p/{}/".format(resp.code))
-                            job.send_to_instagram = True
-                        else:
-                            bot_logger.error(resp)
-            if job.target_chat == cfg.telegram_chat_id and (not job.send_to_telegram or not job.send_to_instagram):
+                job.send_to_instagram = instagram_send(image_path, message)
+            if not is_admin_chat and (not job.send_to_telegram or (insta_logged and not job.send_to_instagram)):
                 worker_queue.put(job)
             else:
                 if job.delete_message:
@@ -248,9 +291,10 @@ def main_loop():
 
 if __name__ == '__main__':
     bot_logger.info('Used device: {}'.format(diffusion.device))
+    clean_cache()
     user = bot.get_me()
     if cfg.instagram_username and cfg.instagram_password:
-        threading.Thread(target=intagram_login).start()
+        threading.Thread(target=instagram_login).start()
     if len(sys.argv) > 1:
         worker_queue.put(Job(sys.argv[1], cfg.telegram_chat_id))
     threading.Thread(target=prompt_worker, daemon=True).start()
