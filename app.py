@@ -64,7 +64,7 @@ if not os.path.exists(cfg.image_cache_dir):
 
 def clean_cache(age=86400, interval=3600):
     for f in os.listdir(cfg.image_cache_dir):
-        if os.stat(os.path.join(cfg.image_cache_dir,f)).st_mtime < time.now - age:
+        if os.stat(os.path.join(cfg.image_cache_dir,f)).st_mtime < time.time() - age:
             os.remove(os.path.join(cfg.image_cache_dir,f))
     threading.Timer(interval, clean_cache).start()
 
