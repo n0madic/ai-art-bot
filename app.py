@@ -28,6 +28,7 @@ class Job:
     images: list = dataclasses.field(default_factory=list)
     send_to_instagram: bool = False
     send_to_telegram: bool = False
+    delete_message: int = 0
 
     def __post_init__(self):
         params = {}
@@ -122,7 +123,8 @@ def change_sleep(message):
 @bot.message_handler(chat_id=cfg.telegram_admin_ids, commands=['random'])
 def random_generate(message):
     job = Job('', message.chat.id)
-    bot.send_message(message.chat.id, 'Put random prompt <code>{}</code> in queue: {}'.format(job.prompt, worker_queue.qsize()), disable_notification=True)
+    msg = bot.send_message(message.chat.id, 'Put random prompt <code>{}</code> in queue: {}'.format(job.prompt, worker_queue.qsize()), disable_notification=True)
+    job.delete_message = msg.message_id
     worker_queue.put(job)
 
 
@@ -143,7 +145,8 @@ def command_generate(message):
             job.seed += i
             worker_queue.put(job)
             if prompt != job.prompt or i == loop - 1:
-                bot.send_message(message.chat.id, 'Put prompt <code>{}</code> in queue: {}'.format(job.prompt, worker_queue.qsize()), disable_notification=True)
+                msg = bot.send_message(message.chat.id, 'Put prompt <code>{}</code> in queue: {}'.format(job.prompt, worker_queue.qsize()), disable_notification=True)
+                job.delete_message = msg.message_id
 
 
 @bot.message_handler(chat_id=cfg.telegram_admin_ids, content_types=['document'], func=lambda m: m.document.file_name == 'ideas.txt')
@@ -227,6 +230,9 @@ def main_loop():
                             bot_logger.error(resp)
             if job.target_chat == cfg.telegram_chat_id and (not job.send_to_telegram or not job.send_to_instagram):
                 worker_queue.put(job)
+            else:
+                if job.delete_message:
+                    bot.delete_message(job.target_chat, job.delete_message)
 
 
 if __name__ == '__main__':
