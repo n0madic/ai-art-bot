@@ -159,6 +159,13 @@ def handle_ideas_update(message):
     bot.delete_message(message.chat.id, message.message_id)
 
 
+@bot.callback_query_handler(func=lambda call: True)
+def callback_query(call):
+    if call.data == 'post_to_channel':
+        bot.copy_message(cfg.telegram_chat_id, call.message.chat.id, call.message.message_id)
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+
+
 def prompt_worker():
     while True:
         if not cfg.command_only_mode and worker_queue.empty():
@@ -200,10 +207,14 @@ def main_loop():
                 except Exception as e:
                     bot_logger.error(e)
             if not job.send_to_telegram:
+                markup = None
+                if not job.target_chat == cfg.telegram_chat_id:
+                    markup = telebot.types.InlineKeyboardMarkup()
+                    markup.add(telebot.types.InlineKeyboardButton("Post to channel", callback_data="post_to_channel"))
                 bot_logger.info('Send image to Telegram...')
                 message = '<code>{}</code>\nseed: <code>{}</code> | scale: <code>{}</code> | steps: <code>{}</code>'.format(job.prompt, job.seed, job.scale, job.steps)
                 try:
-                    resp = bot.send_photo(job.target_chat, photo=image, caption=message)
+                    resp = bot.send_photo(job.target_chat, photo=image, caption=message, reply_markup=markup)
                 except Exception as e:
                     bot_logger.error(e)
                 else:
