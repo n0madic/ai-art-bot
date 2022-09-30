@@ -46,6 +46,7 @@ Artificial intelligence
 Artificial intelligence uprising
 Artificial planet
 Asteroid mining station
+Astronauts stranded on an alien planet
 Avatar
 Battlefield
 Battlemech
@@ -89,6 +90,8 @@ Coral reef
 Coral tropical atoll
 Cottage in the forest
 Countryside with a farmhouse and a barn
+Crashed spaceship
+Crashed UFO
 Creepy
 Creepy forest
 Creepy forest at night
@@ -198,7 +201,9 @@ In a galaxy far, far away
 Incredibly monster
 Indigenous village on an alien planet
 Industrial city
+Insect alien
 Interior of engineering section on a starship
+Invasion
 Jungle temple
 Kaiju
 Kaiju battle
