@@ -26,7 +26,7 @@ class Job:
     steps: int = 0
     images: list = dataclasses.field(default_factory=list)
     send_to_instagram: bool = False
-    send_to_telegram: bool = False
+    message_id: int = 0
     delete_message: int = 0
 
     def __post_init__(self):
@@ -246,17 +246,16 @@ def main_loop():
                 worker_queue.put(job)
                 continue
         for image in job.images:
-            if enhancement.upscaling:
-                bot_logger.info('Upscaling...')
-                try:
-                    face_restore = enhancement.face_presence_detection(image)
-                    if face_restore:
-                        bot_logger.info('Faces detected, restoring...')
-                    image = enhancement.upscale(image, face_restore=face_restore)
-                except Exception as e:
-                    bot_logger.error(e)
-            image_path = None
-            if not job.send_to_telegram:
+            if not job.message_id:
+                if enhancement.upscaling:
+                    bot_logger.info('Upscaling...')
+                    try:
+                        face_restore = enhancement.face_presence_detection(image)
+                        if face_restore:
+                            bot_logger.info('Faces detected, restoring...')
+                        image = enhancement.upscale(image, face_restore=face_restore)
+                    except Exception as e:
+                        bot_logger.error(e)
                 markup = None
                 if is_admin_chat:
                     markup = telebot.types.InlineKeyboardMarkup()
@@ -273,16 +272,17 @@ def main_loop():
                 else:
                     if resp.id:
                         bot_logger.info("https://t.me/{}/{}".format(resp.chat.username, resp.message_id))
-                        job.send_to_telegram = True
-                        image_path = os.path.join(cfg.image_cache_dir, '{}.jpg'.format(resp.message_id))
+                        job.message_id = resp.message_id
+                        image_path = os.path.join(cfg.image_cache_dir, '{}.jpg'.format(job.message_id))
                         if not os.path.exists(image_path):
                             image.save(image_path)
                     else:
                         bot_logger.error(resp)
-            if insta_logged and image_path and not job.send_to_instagram and not is_admin_chat:
+            if insta_logged and job.message_id and not job.send_to_instagram and not is_admin_chat:
                 message = '{}\nseed: {} | scale: {} | steps: {}\n#aiart #stablediffusion'.format(job.prompt, job.seed, job.scale, job.steps)
+                image_path = os.path.join(cfg.image_cache_dir, '{}.jpg'.format(job.message_id))
                 job.send_to_instagram = instagram_send(image_path, message)
-            if not is_admin_chat and (not job.send_to_telegram or (insta_logged and not job.send_to_instagram)):
+            if not is_admin_chat and (not job.message_id or (insta_logged and not job.send_to_instagram)):
                 worker_queue.put(job)
             else:
                 if job.delete_message:
