@@ -6,12 +6,11 @@ import sys
 import transformers
 
 
-random_prompt_probability = float(os.getenv('RANDOM_PROMPT_PROBABILITY', 0.2))
 gpt2_pipe = transformers.pipeline('text-generation', model='Gustavosta/MagicPrompt-Stable-Diffusion', tokenizer='gpt2')
 used_prompts = []
 
 
-def generate(starting_text='', max_length=100):
+def generate(starting_text='', max_length=100, random_prompt_probability=0.5):
     seed = random.randint(100, 1000000)
     transformers.set_seed(seed)
 

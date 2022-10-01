@@ -28,6 +28,12 @@ class Config:
         self.instagram_username = os.getenv('INSTAGRAM_USERNAME')
         self.instagram_password = os.getenv('INSTAGRAM_PASSWORD')
         self.image_cache_dir = os.getenv('IMAGE_CACHE_DIR', 'imagecache')
+        self.random_prompt_probability = float(os.getenv('RANDOM_PROMPT_PROBABILITY', 0.5))
 
 
 cfg = Config()
+
+
+if __name__ == '__main__':
+    import json
+    print(json.dumps(cfg.__dict__, indent=4))

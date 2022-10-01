@@ -35,7 +35,7 @@ class Job:
         self.prompt = re.sub(r'(\w+)=(\d+)', lambda m: params.update({m.group(1): int(m.group(2))}) or '', self.prompt)
         self.prompt = self.prompt.strip()
         if not self.prompt or self.prompt.endswith('+'):
-            self.prompt = prompt.generate(self.prompt.removesuffix('+'))
+            self.prompt = prompt.generate(self.prompt.removesuffix('+'), random_prompt_probability=cfg.random_prompt_probability)
         self.count = params.get('count', self.count)
         self.seed = params.get('seed', self.seed or random.randint(0, 2**32 - 1))
         self.scale = params.get('scale', self.scale or round(random.uniform(7,10), 1))
@@ -154,7 +154,7 @@ def change_sleep(message):
 
 @bot.message_handler(chat_id=cfg.telegram_admin_ids, commands=['random'])
 def random_generate(message):
-    job = Job('', message.chat.id)
+    job = Job(prompt.generate(random_prompt_probability=1), message.chat.id)
     msg = bot.send_message(message.chat.id, 'Put random prompt <code>{}</code> in queue: {}'.format(job.prompt, worker_queue.qsize()), disable_notification=True)
     job.delete_message = msg.message_id
     worker_queue.put(job)
@@ -217,7 +217,7 @@ def callback_query(call):
 def prompt_worker():
     while True:
         if not cfg.command_only_mode and worker_queue.empty():
-             worker_queue.put(Job(prompt.generate(), cfg.telegram_chat_id))
+             worker_queue.put(Job(prompt.generate(random_prompt_probability=cfg.random_prompt_probability), cfg.telegram_chat_id))
         time.sleep(cfg.sleep_time)
 
 
