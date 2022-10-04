@@ -8,24 +8,23 @@ import os
 import prompt
 import re
 import queue
+import PIL
 import random
 import sys
 import telebot
 import threading
 import time
-import torch
+import webui
 
 
 @dataclasses.dataclass
 class Job:
     prompt: str
     target_chat: str
-    count: int = 1
     seed: int = 0
     scale: float = 0
     steps: int = 0
-    images: list = dataclasses.field(default_factory=list)
-    send_to_instagram: bool = False
+    image: PIL.Image.Image = None
     message_id: int = 0
     delete_message: int = 0
 
@@ -36,7 +35,6 @@ class Job:
         self.prompt = self.prompt.strip()
         if not self.prompt or self.prompt.endswith('+'):
             self.prompt = prompt.generate(self.prompt.removesuffix('+'), random_prompt_probability=cfg.random_prompt_probability)
-        self.count = params.get('count', self.count)
         self.seed = params.get('seed', self.seed or random.randint(0, 2**32 - 1))
         self.scale = params.get('scale', self.scale or round(random.uniform(7,10), 1))
         self.steps = params.get('steps', self.steps or random.randint(30,100))
@@ -87,11 +85,17 @@ def instagram_login():
 
 
 def instagram_send(image_path, message):
+    global insta_logged
     if not insta_logged:
         return False
     bot_logger.info('Send image to Instagram...')
     try:
         resp = insta.photo_upload(image_path, caption=message)
+    except instagrapi.exceptions.ChallengeRequired as e:
+        bot_logger.error(e)
+        insta.logout()
+        insta_logged = False
+        threading.Thread(target=instagram_login).start()
     except Exception as e:
         bot_logger.error(e)
     else:
@@ -122,7 +126,7 @@ def change_chat(message):
     except telebot.apihelper.ApiException as e:
         bot.send_message(message.chat.id, e)
     else:
-        cfg.telegram_chat_id = chat_id
+        cfg.telegram_chat_id = resp.id
         bot.send_message(message.chat.id, 'Target chat changed on {}'.format(resp.title))
 
 
@@ -150,6 +154,17 @@ def change_sleep(message):
 def change_sleep(message):
     cfg._load()
     bot.send_message(message.chat.id, 'Config reseted')
+
+
+@bot.message_handler(chat_id=cfg.telegram_admin_ids, commands=['webui'])
+def change_webui_mode(message):
+    cfg.webui = message.text.split()[1].lower() == 'on'
+    if cfg.webui:
+        _, _, share_url = webui.gr.launch(share=True, prevent_thread_lock=True)
+        bot.send_message(message.chat.id, 'WebUI enabled on {}'.format(share_url))
+    else:
+        webui.gr.close(verbose=True)
+        bot.send_message(message.chat.id, 'WebUI disabled')
 
 
 @bot.message_handler(chat_id=cfg.telegram_admin_ids, commands=['random'])
@@ -217,7 +232,7 @@ def callback_query(call):
 def prompt_worker():
     while True:
         if not cfg.command_only_mode and worker_queue.empty():
-             worker_queue.put(Job(prompt.generate(random_prompt_probability=cfg.random_prompt_probability), cfg.telegram_chat_id))
+             worker_queue.put(Job(prompt.generate(), cfg.telegram_chat_id))
         time.sleep(cfg.sleep_time)
 
 
@@ -225,74 +240,68 @@ def main_loop():
     while True:
         job = worker_queue.get()
         is_admin_chat = int(job.target_chat) in cfg.telegram_admin_ids
-        bot_logger.info('Generating (count={}, seed={}, scale={}, steps={}) image for prompt: {}'.format(job.count, job.seed, job.scale, job.steps, job.prompt))
-        if len(job.images) == 0:
+        bot_logger.info('Generating (seed={}, scale={}, steps={}) image for prompt: {}'.format(job.seed, job.scale, job.steps, job.prompt))
+        if not job.image:
             try:
-                job.images = diffusion.generate(job.prompt, count=job.count, seed=job.seed, steps=job.steps)
-            except IndexError as e:
-                bot_logger.error(e)
-                job.steps += 1
-                worker_queue.put(job)
-                continue
-            except RuntimeError as e:
-                bot_logger.error(e)
-                torch.cuda.empty_cache()
-                if job.count > 1:
-                    job.count -= 1
-                worker_queue.put(job)
-                continue
+                job.image = diffusion.generate(job.prompt, seed=job.seed, scale=job.scale, steps=job.steps)
             except Exception as e:
                 bot_logger.error(e)
                 worker_queue.put(job)
                 continue
-        for image in job.images:
-            if not job.message_id:
-                if enhancement.upscaling:
-                    bot_logger.info('Upscaling...')
-                    try:
-                        face_restore = enhancement.face_presence_detection(image)
-                        if face_restore:
-                            bot_logger.info('Faces detected, restoring...')
-                        image = enhancement.upscale(image, face_restore=face_restore)
-                    except Exception as e:
-                        bot_logger.error(e)
-                markup = None
-                if is_admin_chat:
-                    markup = telebot.types.InlineKeyboardMarkup()
-                    markup.add(telebot.types.InlineKeyboardButton("Post to channel", callback_data="post_to_channel"),
-                               telebot.types.InlineKeyboardButton("Post to Instagram", callback_data="post_to_instagram"),
-                               telebot.types.InlineKeyboardButton("Post to both", callback_data="post_to_both"),
-                               row_width=2)
-                bot_logger.info('Send image to Telegram...')
-                message = '<code>{}</code>\nseed: <code>{}</code> | scale: <code>{}</code> | steps: <code>{}</code>'.format(job.prompt, job.seed, job.scale, job.steps)
+        else:
+            job.seed = job.image.info['seed']
+            job.scale = job.image.info['scale']
+            job.steps = job.image.info['steps']
+        if not job.message_id:
+            if cfg.upscaling:
+                bot_logger.info('Upscaling...')
                 try:
-                    resp = bot.send_photo(job.target_chat, photo=image, caption=message, reply_markup=markup)
+                    face_restore = enhancement.face_presence_detection(job.image)
+                    if face_restore:
+                        bot_logger.info('Faces detected, restoring...')
+                    job.image = enhancement.upscale(job.image, face_restore=face_restore)
                 except Exception as e:
                     bot_logger.error(e)
-                else:
-                    if resp.id:
-                        bot_logger.info("https://t.me/{}/{}".format(resp.chat.username, resp.message_id))
-                        job.message_id = resp.message_id
-                        image_path = os.path.join(cfg.image_cache_dir, '{}.jpg'.format(job.message_id))
-                        if not os.path.exists(image_path):
-                            image.save(image_path)
-                    else:
-                        bot_logger.error(resp)
-            if insta_logged and job.message_id and not job.send_to_instagram and not is_admin_chat:
-                message = '{}\nseed: {} | scale: {} | steps: {}\n#aiart #stablediffusion'.format(job.prompt, job.seed, job.scale, job.steps)
-                image_path = os.path.join(cfg.image_cache_dir, '{}.jpg'.format(job.message_id))
-                job.send_to_instagram = instagram_send(image_path, message)
-            if not is_admin_chat and (not job.message_id or (insta_logged and not job.send_to_instagram)):
-                worker_queue.put(job)
+            markup = None
+            if is_admin_chat:
+                markup = telebot.types.InlineKeyboardMarkup()
+                markup.add(telebot.types.InlineKeyboardButton("Post to channel", callback_data="post_to_channel"),
+                           telebot.types.InlineKeyboardButton("Post to Instagram", callback_data="post_to_instagram"),
+                           telebot.types.InlineKeyboardButton("Post to both", callback_data="post_to_both"),
+                           row_width=2)
+            bot_logger.info('Send image to Telegram...')
+            message = '<code>{}</code>\nseed: <code>{}</code> | scale: <code>{}</code> | steps: <code>{}</code>'.format(job.prompt, job.seed, job.scale, job.steps)
+            try:
+                resp = bot.send_photo(job.target_chat, photo=job.image, caption=message, reply_markup=markup)
+            except Exception as e:
+                bot_logger.error(e)
             else:
-                if job.delete_message:
-                    bot.delete_message(job.target_chat, job.delete_message)
+                if resp.id:
+                    bot_logger.info("https://t.me/{}/{}".format(resp.chat.username, resp.message_id))
+                    job.message_id = resp.message_id
+                    image_path = os.path.join(cfg.image_cache_dir, '{}.jpg'.format(job.message_id))
+                    if not os.path.exists(image_path):
+                        job.image.save(image_path)
+                else:
+                    bot_logger.error(resp)
+        if insta_logged and job.message_id and not is_admin_chat:
+            message = '{}\nseed: {} | scale: {} | steps: {}\n#aiart #stablediffusion'.format(job.prompt, job.seed, job.scale, job.steps)
+            image_path = os.path.join(cfg.image_cache_dir, '{}.jpg'.format(job.message_id))
+            if not instagram_send(image_path, message):
+                bot_logger.error('Error posting to Instagram')
+        if not is_admin_chat and not job.message_id:
+            worker_queue.put(job)
+        else:
+            if job.delete_message:
+                bot.delete_message(job.target_chat, job.delete_message)
 
 
 if __name__ == '__main__':
     bot_logger.info('Used device: {}'.format(diffusion.device))
     clean_cache()
     user = bot.get_me()
+    if cfg.webui:
+        webui.gr.launch(share=True, prevent_thread_lock=True)
     if cfg.instagram_username and cfg.instagram_password:
         threading.Thread(target=instagram_login).start()
     if len(sys.argv) > 1:
@@ -311,6 +320,7 @@ if __name__ == '__main__':
             telebot.types.BotCommand('sleep', 'Change sleep time'),
             telebot.types.BotCommand('reset', 'Reset config'),
             telebot.types.BotCommand('random', 'Generate random prompt'),
+            telebot.types.BotCommand('webui', 'WebUI on/off'),
         ])
         bot.infinity_polling()
         bot.delete_my_commands()

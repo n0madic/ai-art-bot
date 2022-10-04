@@ -29,6 +29,9 @@ class Config:
         self.instagram_password = os.getenv('INSTAGRAM_PASSWORD')
         self.image_cache_dir = os.getenv('IMAGE_CACHE_DIR', 'imagecache')
         self.random_prompt_probability = float(os.getenv('RANDOM_PROMPT_PROBABILITY', 0.5))
+        self.webui = os.getenv('WEBUI', 'false').lower() in ['true', 'on', 'yes', '1']
+        self.upscaling = os.getenv('UPSCALING', 'true').lower() in ['true', 'on', 'yes', '1']
+        self.face_restoring = os.getenv('FACE_RESTORING', 'false').lower() in ['true', 'on', 'yes', '1']
 
 
 cfg = Config()

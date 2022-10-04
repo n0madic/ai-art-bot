@@ -1,5 +1,6 @@
 diffusers
 ftfy
+gradio
 instagrapi>=1.16
 pyTelegramBotAPI
 realesrgan

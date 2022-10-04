@@ -1,4 +1,4 @@
-import os
+import config
 import random
 import re
 import string
@@ -10,7 +10,7 @@ gpt2_pipe = transformers.pipeline('text-generation', model='Gustavosta/MagicProm
 used_prompts = []
 
 
-def generate(starting_text='', max_length=100, random_prompt_probability=0.5):
+def generate(starting_text='', max_length=100, random_prompt_probability=config.cfg.random_prompt_probability):
     seed = random.randint(100, 1000000)
     transformers.set_seed(seed)
 
@@ -36,7 +36,8 @@ def generate(starting_text='', max_length=100, random_prompt_probability=0.5):
     responses.sort(key=len, reverse=True)
 
     response_end = responses[0].strip(string.punctuation)
-    response_end = re.sub('[^ ]+\.[^ ]+','', response_end)
+    response_end = re.sub(r'[^ ]+\.[^ ]+','', response_end)
+    response_end = re.sub(r'\(\s*\)','', response_end)
     response_end = response_end.replace(',,', ',')
     response_end = response_end.replace('| |', '|')
     response_end = response_end.replace('<', '').replace('>', '')
