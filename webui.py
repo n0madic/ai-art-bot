@@ -9,7 +9,7 @@ def webui_fn(prompt_input, scale, steps, seed, enhancements):
         prompt_input = prompt.generate(prompt_input.removesuffix('+'))
     image = diffusion.generate(prompt_input, seed=seed, scale=scale, steps=steps)
     message = '{} (seed={} scale={} steps={})'.format(prompt_input, image.info['seed'], image.info['scale'], image.info['steps'])
-    if 'Upscale' in enhancements:
+    if 'Upscale' in enhancements or 'Face restore' in enhancements:
         image = enhancement.upscale(image, face_restore='Face restore' in enhancements)
     return image, message
 

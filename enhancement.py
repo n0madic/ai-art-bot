@@ -28,7 +28,7 @@ def face_presence_detection(image):
 def upscale(image, face_restore=False):
     info = image.info
     image = numpy.array(image)
-    if face_restore and config.cfg.face_restoring:
+    if face_restore:
         _, _, image = face_enhancer.enhance(image)
     else:
         image = upsampler.enhance(image, outscale=4)[0]
