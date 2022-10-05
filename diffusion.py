@@ -16,9 +16,9 @@ lock = threading.Lock()
 
 def generate(prompt, seed, scale=7.5, steps=50):
     seed = seed or random.randint(0, 2**32 - 1)
-    generator = torch.Generator(device=device).manual_seed(seed)
     try:
         lock.acquire()
+        generator = torch.Generator(device=device).manual_seed(int(seed))
         if device.type == 'cuda':
             with torch.autocast('cuda'):
                 image = pipe(
@@ -36,12 +36,6 @@ def generate(prompt, seed, scale=7.5, steps=50):
                 generator=generator,
                 scheduler=scheduler
             ).images[0]
-    except IndexError as e:
-        steps += 1
-        return generate(prompt, scale, steps, seed)
-    except RuntimeError as e:
-        torch.cuda.empty_cache()
-        return generate(prompt, scale, steps, seed)
     finally:
         lock.release()
     image.info['prompt'] = prompt

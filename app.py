@@ -12,8 +12,10 @@ import PIL
 import random
 import sys
 import telebot
+import textwrap
 import threading
 import time
+import twitter
 import webui
 
 
@@ -32,6 +34,7 @@ class Job:
         params = {}
         self.prompt = re.sub(r'(\w+)=(\d+\.\d+)', lambda m: params.update({m.group(1): float(m.group(2))}) or '', self.prompt)
         self.prompt = re.sub(r'(\w+)=(\d+)', lambda m: params.update({m.group(1): int(m.group(2))}) or '', self.prompt)
+        self.prompt = re.sub(r'\(\s*\)','', self.prompt)
         self.prompt = self.prompt.strip()
         if not self.prompt or self.prompt.endswith('+'):
             self.prompt = prompt.generate(self.prompt.removesuffix('+'), random_prompt_probability=cfg.random_prompt_probability)
@@ -53,6 +56,22 @@ bot.add_custom_filter(telebot.custom_filters.ChatFilter())
 
 insta = instagrapi.Client(logger=insta_logger)
 insta_logged = False
+
+if cfg.twitter_consumer_key and cfg.twitter_consumer_secret and cfg.twitter_access_token and cfg.twitter_access_token_secret:
+    try:
+        twitter_api = twitter.Api(consumer_key=cfg.twitter_consumer_key,
+                                  consumer_secret=cfg.twitter_consumer_secret,
+                                  access_token_key=cfg.twitter_access_token,
+                                  access_token_secret=cfg.twitter_access_token_secret,
+                                  sleep_on_rate_limit=True)
+        tw_creds = twitter_api.VerifyCredentials()
+    except Exception as e:
+        bot_logger.error("Twitter authentication: {}".format(e))
+        twitter_api = None
+    else:
+        bot_logger.info('Logged in Twitter as {}'.format(tw_creds.screen_name))
+else:
+    twitter_api = None
 
 worker_queue = queue.Queue()
 
@@ -104,6 +123,19 @@ def instagram_send(image_path, message):
             return True
         else:
             bot_logger.error(resp)
+    return False
+
+
+def twitter_send(image_path, message):
+    status = textwrap.shorten(message, width=280, placeholder='...')
+    bot_logger.info('Send image to Twitter...')
+    try:
+        resp = twitter_api.PostUpdate(status, media=image_path)
+    except Exception as e:
+        bot_logger.error(e)
+    else:
+        bot_logger.info("https://twitter.com/{}/status/{}".format(resp.user.screen_name, resp.id))
+        return True
     return False
 
 
@@ -206,10 +238,11 @@ def handle_ideas_update(message):
     bot.delete_message(message.chat.id, message.message_id)
 
 
-@bot.callback_query_handler(func=lambda call: True)
+@bot.callback_query_handler(func=lambda call: call.from_user.id in cfg.telegram_admin_ids)
 def callback_query(call):
     sended = False
-    if call.data == 'post_to_channel' or call.data == 'post_to_both':
+    image_path = os.path.join(cfg.image_cache_dir, '{}.jpg'.format(call.message.message_id))
+    if call.data == 'post_to_channel' or call.data == 'post_to_all':
         try:
             bot.copy_message(cfg.telegram_chat_id, call.message.chat.id, call.message.message_id)
             bot.answer_callback_query(call.id, 'Posted to channel')
@@ -218,14 +251,19 @@ def callback_query(call):
             bot.answer_callback_query(call.id, 'Error posting to channel')
         else:
             sended = True
-    if call.data == 'post_to_instagram' or call.data == 'post_to_both':
-        image_path = os.path.join(cfg.image_cache_dir, '{}.jpg'.format(call.message.message_id))
+    if call.data == 'post_to_instagram' or call.data == 'post_to_all':
         sended = instagram_send(image_path, call.message.caption + '\n#aiart #stablediffusion')
         if sended:
             bot.answer_callback_query(call.id, 'Posted to Instagram')
         else:
             bot.answer_callback_query(call.id, 'Error posting to Instagram')
-    if sended and call.data == 'post_to_both':
+    if call.data == 'post_to_twitter' or call.data == 'post_to_all':
+        sended = twitter_send(image_path, call.message.caption + '\n#AIart #stablediffusion')
+        if sended:
+            bot.answer_callback_query(call.id, 'Posted to Twitter')
+        else:
+            bot.answer_callback_query(call.id, 'Error posting to Twitter')
+    if sended and call.data == 'post_to_all':
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
 
@@ -244,6 +282,11 @@ def main_loop():
         if not job.image:
             try:
                 job.image = diffusion.generate(job.prompt, seed=job.seed, scale=job.scale, steps=job.steps)
+            except IndexError as e:
+                bot_logger.error(e)
+                job.steps += 1
+                worker_queue.put(job)
+                continue
             except Exception as e:
                 bot_logger.error(e)
                 worker_queue.put(job)
@@ -262,13 +305,17 @@ def main_loop():
                     job.image = enhancement.upscale(job.image, face_restore=face_restore)
                 except Exception as e:
                     bot_logger.error(e)
-            markup = None
             if is_admin_chat:
                 markup = telebot.types.InlineKeyboardMarkup()
-                markup.add(telebot.types.InlineKeyboardButton("Post to channel", callback_data="post_to_channel"),
-                           telebot.types.InlineKeyboardButton("Post to Instagram", callback_data="post_to_instagram"),
-                           telebot.types.InlineKeyboardButton("Post to both", callback_data="post_to_both"),
-                           row_width=2)
+                buttons = [telebot.types.InlineKeyboardButton("Post to channel", callback_data="post_to_channel")]
+                if insta_logged:
+                    buttons.append(telebot.types.InlineKeyboardButton("Post to Instagram", callback_data="post_to_instagram"))
+                if twitter_api:
+                    buttons.append(telebot.types.InlineKeyboardButton("Post to Twitter", callback_data="post_to_twitter"))
+                markup.add(*buttons)
+                markup.add(telebot.types.InlineKeyboardButton("Post to all", callback_data="post_to_all"))
+            else:
+                markup = None
             bot_logger.info('Send image to Telegram...')
             message = '<code>{}</code>\nseed: <code>{}</code> | scale: <code>{}</code> | steps: <code>{}</code>'.format(job.prompt, job.seed, job.scale, job.steps)
             try:
@@ -284,11 +331,16 @@ def main_loop():
                         job.image.save(image_path)
                 else:
                     bot_logger.error(resp)
-        if insta_logged and job.message_id and not is_admin_chat:
-            message = '{}\nseed: {} | scale: {} | steps: {}\n#aiart #stablediffusion'.format(job.prompt, job.seed, job.scale, job.steps)
+        if job.message_id and not is_admin_chat:
             image_path = os.path.join(cfg.image_cache_dir, '{}.jpg'.format(job.message_id))
-            if not instagram_send(image_path, message):
-                bot_logger.error('Error posting to Instagram')
+            if insta_logged:
+                message = '{}\nseed: {} | scale: {} | steps: {}\n#aiart #stablediffusion'.format(job.prompt, job.seed, job.scale, job.steps)
+                if not instagram_send(image_path, message):
+                    bot_logger.error('Error posting to Instagram')
+            if twitter_api:
+                message = '{}\n#AIart #stablediffusion'.format(job.prompt)
+                if not twitter_send(image_path, message):
+                    bot_logger.error('Error posting to Twitter')
         if not is_admin_chat and not job.message_id:
             worker_queue.put(job)
         else:

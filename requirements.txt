@@ -3,6 +3,7 @@ ftfy
 gradio
 instagrapi>=1.16
 pyTelegramBotAPI
+python-twitter
 realesrgan
 scipy
 transformers

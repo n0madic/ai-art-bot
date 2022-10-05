@@ -25,6 +25,10 @@ class Config:
         else:
             self.telegram_admin_ids = []
         self.telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID')
+        self.twitter_consumer_key = os.getenv('TWITTER_CONSUMER_KEY')
+        self.twitter_consumer_secret = os.getenv('TWITTER_CONSUMER_SECRET')
+        self.twitter_access_token = os.getenv('TWITTER_ACCESS_TOKEN')
+        self.twitter_access_token_secret = os.getenv('TWITTER_ACCESS_TOKEN_SECRET')
         self.instagram_username = os.getenv('INSTAGRAM_USERNAME')
         self.instagram_password = os.getenv('INSTAGRAM_PASSWORD')
         self.image_cache_dir = os.getenv('IMAGE_CACHE_DIR', 'imagecache')
