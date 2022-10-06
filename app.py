@@ -214,17 +214,17 @@ def command_generate(message):
     if prompt == "":
         bot.send_message(message.chat.id, 'Please provide a prompt')
     else:
-        loop = re.findall(r'loop=(\d+)', prompt)
-        if loop:
-            loop = int(loop[0])
-            prompt = re.sub(r'loop=(\d+)', '', prompt).strip()
+        batch = re.findall(r'batch=(\d+)', prompt)
+        if batch:
+            batch = int(batch[0])
+            prompt = re.sub(r'batch=(\d+)', '', prompt).strip()
         else:
-            loop = 1
-        for i in range(loop):
+            batch = 1
+        for i in range(batch):
             job = Job(prompt, message.chat.id)
             job.seed += i
             worker_queue.put(job)
-            if prompt != job.prompt or i == loop - 1:
+            if prompt != job.prompt or i == batch - 1:
                 msg = bot.send_message(message.chat.id, 'Put prompt <code>{}</code> in queue: {}'.format(job.prompt, worker_queue.qsize()), disable_notification=True)
                 job.delete_message = msg.message_id
 
@@ -279,7 +279,7 @@ def main_loop():
         job = worker_queue.get()
         is_admin_chat = int(job.target_chat) in cfg.telegram_admin_ids
         is_turbo_mode = job.target_chat == cfg.telegram_turbo_chat_id
-        bot_logger.info('Generating (seed={}, scale={}, steps={}) image for prompt: {}'.format(job.seed, job.scale, job.steps, job.prompt))
+        bot_logger.info('Generating image for prompt: {} (seed={} scale={} steps={})'.format(job.prompt, job.seed, job.scale, job.steps))
         if not job.image:
             try:
                 job.image = diffusion.generate(job.prompt, seed=job.seed, scale=job.scale, steps=job.steps)
@@ -308,14 +308,14 @@ def main_loop():
                     bot_logger.error(e)
             if is_admin_chat or is_turbo_mode:
                 markup = telebot.types.InlineKeyboardMarkup()
-                buttons = [telebot.types.InlineKeyboardButton("Post to channel", callback_data="post_to_channel")]
+                buttons = [telebot.types.InlineKeyboardButton("Telegram", callback_data="post_to_channel")]
                 if insta_logged:
-                    buttons.append(telebot.types.InlineKeyboardButton("Post to Instagram", callback_data="post_to_instagram"))
+                    buttons.append(telebot.types.InlineKeyboardButton("Instagram", callback_data="post_to_instagram"))
                 if twitter_api:
-                    buttons.append(telebot.types.InlineKeyboardButton("Post to Twitter", callback_data="post_to_twitter"))
+                    buttons.append(telebot.types.InlineKeyboardButton("Twitter", callback_data="post_to_twitter"))
                 if len(buttons) > 1:
-                    buttons.append(telebot.types.InlineKeyboardButton("Post to all", callback_data="post_to_all"))
-                markup.add(*buttons)
+                    buttons.append(telebot.types.InlineKeyboardButton("ALL", callback_data="post_to_all"))
+                markup.add(*buttons, row_width=len(buttons))
             else:
                 markup = None
             bot_logger.info('Send image to Telegram...')
