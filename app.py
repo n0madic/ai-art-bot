@@ -32,9 +32,9 @@ class Job:
 
     def __post_init__(self):
         params = {}
-        self.prompt = re.sub(r'(\w+)=(\d+\.\d+)', lambda m: params.update({m.group(1): float(m.group(2))}) or '', self.prompt)
-        self.prompt = re.sub(r'(\w+)=(\d+)', lambda m: params.update({m.group(1): int(m.group(2))}) or '', self.prompt)
-        self.prompt = re.sub(r'\(\s*\)','', self.prompt)
+        self.prompt = re.sub(r'(\w+)\s?[:=]\s?(\d+\.\d+)', lambda m: params.update({m.group(1): float(m.group(2))}) or '', self.prompt)
+        self.prompt = re.sub(r'(\w+)\s?[:=]\s?(\d+)', lambda m: params.update({m.group(1): int(m.group(2))}) or '', self.prompt)
+        self.prompt = re.sub(r'[(|]\s*[)|]','', self.prompt)
         self.prompt = self.prompt.strip()
         if not self.prompt or self.prompt.endswith('+'):
             self.prompt = prompt.generate(self.prompt.removesuffix('+'), random_prompt_probability=cfg.random_prompt_probability)
@@ -127,7 +127,7 @@ def instagram_send(image_path, message):
 
 
 def twitter_send(image_path, message):
-    status = textwrap.shorten(message, width=280, placeholder='...')
+    status = textwrap.shorten(message.splitlines()[0], width=280, placeholder='...')
     bot_logger.info('Send image to Twitter...')
     try:
         resp = twitter_api.PostUpdate(status, media=image_path)
@@ -245,7 +245,6 @@ def callback_query(call):
     if call.data == 'post_to_channel' or call.data == 'post_to_all':
         try:
             bot.copy_message(cfg.telegram_chat_id, call.message.chat.id, call.message.message_id)
-            bot.answer_callback_query(call.id, 'Posted to channel')
         except Exception as e:
             bot_logger.error(e)
             bot.answer_callback_query(call.id, 'Error posting to channel')
@@ -267,17 +266,18 @@ def callback_query(call):
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
 
-def prompt_worker():
+def prompt_worker(chat_id, sleep_time=600):
     while True:
-        if not cfg.command_only_mode and worker_queue.empty():
-             worker_queue.put(Job(prompt.generate(), cfg.telegram_chat_id))
-        time.sleep(cfg.sleep_time)
+        if not cfg.command_only_mode:
+            worker_queue.put(Job(prompt.generate(), chat_id))
+        time.sleep(sleep_time)
 
 
 def main_loop():
     while True:
         job = worker_queue.get()
         is_admin_chat = int(job.target_chat) in cfg.telegram_admin_ids
+        is_turbo_mode = job.target_chat == cfg.telegram_turbo_chat_id
         bot_logger.info('Generating (seed={}, scale={}, steps={}) image for prompt: {}'.format(job.seed, job.scale, job.steps, job.prompt))
         if not job.image:
             try:
@@ -305,15 +305,16 @@ def main_loop():
                     job.image = enhancement.upscale(job.image, face_restore=face_restore)
                 except Exception as e:
                     bot_logger.error(e)
-            if is_admin_chat:
+            if is_admin_chat or is_turbo_mode:
                 markup = telebot.types.InlineKeyboardMarkup()
                 buttons = [telebot.types.InlineKeyboardButton("Post to channel", callback_data="post_to_channel")]
                 if insta_logged:
                     buttons.append(telebot.types.InlineKeyboardButton("Post to Instagram", callback_data="post_to_instagram"))
                 if twitter_api:
                     buttons.append(telebot.types.InlineKeyboardButton("Post to Twitter", callback_data="post_to_twitter"))
+                if len(buttons) > 1:
+                    buttons.append(telebot.types.InlineKeyboardButton("Post to all", callback_data="post_to_all"))
                 markup.add(*buttons)
-                markup.add(telebot.types.InlineKeyboardButton("Post to all", callback_data="post_to_all"))
             else:
                 markup = None
             bot_logger.info('Send image to Telegram...')
@@ -331,7 +332,7 @@ def main_loop():
                         job.image.save(image_path)
                 else:
                     bot_logger.error(resp)
-        if job.message_id and not is_admin_chat:
+        if job.message_id and not is_admin_chat and not is_turbo_mode:
             image_path = os.path.join(cfg.image_cache_dir, '{}.jpg'.format(job.message_id))
             if insta_logged:
                 message = '{}\nseed: {} | scale: {} | steps: {}\n#aiart #stablediffusion'.format(job.prompt, job.seed, job.scale, job.steps)
@@ -358,7 +359,9 @@ if __name__ == '__main__':
         threading.Thread(target=instagram_login).start()
     if len(sys.argv) > 1:
         worker_queue.put(Job(sys.argv[1], cfg.telegram_chat_id))
-    threading.Thread(target=prompt_worker, daemon=True).start()
+    threading.Thread(target=prompt_worker, args=(cfg.telegram_chat_id, cfg.sleep_time), daemon=True).start()
+    if cfg.telegram_turbo_chat_id:
+        threading.Thread(target=prompt_worker, args=(cfg.telegram_turbo_chat_id, cfg.turbo_sleep_time), daemon=True).start()
     if len(cfg.telegram_admin_ids) > 0:
         threading.Thread(target=main_loop, daemon=True).start()
         bot_logger.info('Starting bot with username: {}'.format(user.username))

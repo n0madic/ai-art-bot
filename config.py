@@ -16,8 +16,14 @@ class Config:
                     if line and not line.startswith('#'):
                         key, value = line.split('=', 1)
                         os.environ[key] = value
+
         self.command_only_mode = os.getenv('COMMAND_ONLY_MODE', 'false').lower() in ['true', 'on', 'yes', '1']
-        self.sleep_time = float(os.getenv('SLEEP_TIME', 60))
+        self.face_restoring = os.getenv('FACE_RESTORING', 'false').lower() in ['true', 'on', 'yes', '1']
+        self.instagram_username = os.getenv('INSTAGRAM_USERNAME')
+        self.instagram_password = os.getenv('INSTAGRAM_PASSWORD')
+        self.image_cache_dir = os.getenv('IMAGE_CACHE_DIR', 'imagecache')
+        self.random_prompt_probability = float(os.getenv('RANDOM_PROMPT_PROBABILITY', 0.5))
+        self.sleep_time = float(os.getenv('SLEEP_TIME', 600))
         self.telegram_token = os.getenv('TELEGRAM_TOKEN')
         telegram_admin_id = os.getenv('TELEGRAM_ADMIN_ID')
         if telegram_admin_id:
@@ -25,17 +31,14 @@ class Config:
         else:
             self.telegram_admin_ids = []
         self.telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID')
+        self.telegram_turbo_chat_id = os.getenv('TELEGRAM_TURBO_CHAT_ID')
+        self.turbo_sleep_time = float(os.getenv('TURBO_SLEEP_TIME', 60))
         self.twitter_consumer_key = os.getenv('TWITTER_CONSUMER_KEY')
         self.twitter_consumer_secret = os.getenv('TWITTER_CONSUMER_SECRET')
         self.twitter_access_token = os.getenv('TWITTER_ACCESS_TOKEN')
         self.twitter_access_token_secret = os.getenv('TWITTER_ACCESS_TOKEN_SECRET')
-        self.instagram_username = os.getenv('INSTAGRAM_USERNAME')
-        self.instagram_password = os.getenv('INSTAGRAM_PASSWORD')
-        self.image_cache_dir = os.getenv('IMAGE_CACHE_DIR', 'imagecache')
-        self.random_prompt_probability = float(os.getenv('RANDOM_PROMPT_PROBABILITY', 0.5))
         self.webui = os.getenv('WEBUI', 'false').lower() in ['true', 'on', 'yes', '1']
         self.upscaling = os.getenv('UPSCALING', 'true').lower() in ['true', 'on', 'yes', '1']
-        self.face_restoring = os.getenv('FACE_RESTORING', 'false').lower() in ['true', 'on', 'yes', '1']
 
 
 cfg = Config()

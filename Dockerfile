@@ -11,7 +11,7 @@ WORKDIR /app
 
 COPY requirements.txt /app
 
-RUN pip install --prefer-binary --no-cache-dir -q -r requirements.txt && \
+RUN pip install --prefer-binary --no-cache-dir -r requirements.txt && \
     rm -rf ~/.cache
 
 COPY gfpgan /app/gfpgan
