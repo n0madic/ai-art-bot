@@ -32,8 +32,8 @@ class Job:
 
     def __post_init__(self):
         params = {}
-        self.prompt = re.sub(r'(\w+)\s?[:=]\s?(\d+\.\d+)', lambda m: params.update({m.group(1): float(m.group(2))}) or '', self.prompt)
-        self.prompt = re.sub(r'(\w+)\s?[:=]\s?(\d+)', lambda m: params.update({m.group(1): int(m.group(2))}) or '', self.prompt)
+        self.prompt = re.sub(r'(\w+)[:=]\s?(\d+\.\d+)', lambda m: params.update({m.group(1).lower(): float(m.group(2))}) or '', self.prompt)
+        self.prompt = re.sub(r'(\w+)[:=]\s?(\d+)', lambda m: params.update({m.group(1).lower(): int(m.group(2))}) or '', self.prompt)
         self.prompt = re.sub(r'[(|]\s*[)|]','', self.prompt)
         self.prompt = self.prompt.strip()
         if not self.prompt or self.prompt.endswith('+'):
@@ -127,7 +127,8 @@ def instagram_send(image_path, message):
 
 
 def twitter_send(image_path, message):
-    status = textwrap.shorten(message.splitlines()[0], width=280, placeholder='...')
+    message = message.splitlines()[0] + '\n#AIart #stablediffusion'
+    status = textwrap.shorten(message, width=280, placeholder='...')
     bot_logger.info('Send image to Twitter...')
     try:
         resp = twitter_api.PostUpdate(status, media=image_path)
@@ -250,14 +251,14 @@ def callback_query(call):
             bot.answer_callback_query(call.id, 'Error posting to channel')
         else:
             sended = True
-    if call.data == 'post_to_instagram' or call.data == 'post_to_all':
+    if insta_logged and (call.data == 'post_to_instagram' or call.data == 'post_to_all'):
         sended = instagram_send(image_path, call.message.caption + '\n#aiart #stablediffusion')
         if sended:
             bot.answer_callback_query(call.id, 'Posted to Instagram')
         else:
             bot.answer_callback_query(call.id, 'Error posting to Instagram')
-    if call.data == 'post_to_twitter' or call.data == 'post_to_all':
-        sended = twitter_send(image_path, call.message.caption + '\n#AIart #stablediffusion')
+    if twitter_api and (call.data == 'post_to_twitter' or call.data == 'post_to_all'):
+        sended = twitter_send(image_path, call.message.caption)
         if sended:
             bot.answer_callback_query(call.id, 'Posted to Twitter')
         else:
@@ -339,8 +340,7 @@ def main_loop():
                 if not instagram_send(image_path, message):
                     bot_logger.error('Error posting to Instagram')
             if twitter_api:
-                message = '{}\n#AIart #stablediffusion'.format(job.prompt)
-                if not twitter_send(image_path, message):
+                if not twitter_send(image_path, job.prompt):
                     bot_logger.error('Error posting to Twitter')
         if not is_admin_chat and not job.message_id:
             worker_queue.put(job)
