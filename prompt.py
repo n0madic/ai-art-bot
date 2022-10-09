@@ -26,31 +26,37 @@ def generate(starting_text='', max_length=100, random_prompt_probability=config.
     if starting_text:
         used_prompts.append(starting_text)
 
-    responses = []
-    while not len(responses):
+    prompt = ''
+    while not prompt:
+        responses = []
         for r in gpt2_pipe(starting_text, max_length=random.randint(60, max_length), num_return_sequences=4):
             resp = r['generated_text'].strip()
             if resp and resp != starting_text and len(resp) > (len(starting_text) * 2) and not resp.endswith((':', '-', '—')) and not resp.find('--'):
                 continue
             responses.append(resp)
-    responses.sort(key=len, reverse=True)
-
-    response_end = responses[0].strip(string.punctuation)
-    response_end = re.sub(r'[^ ]+\.[^ ]+','', response_end)
-    response_end = re.sub(r'\(\s*\)','', response_end)
-    response_end = response_end.replace(',,', ',')
-    response_end = response_end.replace('| |', '|')
-    response_end = response_end.replace('<', '').replace('>', '')
-    response_end = response_end.replace('[[', '').replace(']]', '')
-    response_end = response_end.replace('((', '').replace('))', '')
-    response_end = ' '.join(response_end.split())
-
-    return response_end.strip()
+        for r in responses:
+            response_end = r.strip(string.punctuation)
+            response_end = re.sub(r'[^ ]+\.[^ ]+','', response_end)
+            response_end = re.sub(r'\(\s*\)','', response_end)
+            response_end = response_end.replace(',,', ',')
+            response_end = response_end.replace('| |', '|')
+            response_end = response_end.replace('<', '').replace('>', '')
+            response_end = response_end.replace('[[', '').replace(']]', '')
+            response_end = response_end.replace('((', '').replace('))', '')
+            response_end = ' '.join(response_end.split()).strip()
+            if response_end and len(response_end) > 20:
+                prompt = response_end
+                break
+    return prompt
 
 
 if __name__ == '__main__':
     starting_text = ''
     if len(sys.argv) > 1:
         starting_text = sys.argv[1]
+    delimiter = '=' * 80
     for _ in range(10):
-        print(generate(starting_text), end='\n\n')
+        prompt = generate(starting_text)
+        if not prompt:
+            raise Exception('No prompt generated')
+        print('{}\n{}\n{}'.format(delimiter, prompt, delimiter), end='\n\n')
