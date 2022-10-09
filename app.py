@@ -246,6 +246,8 @@ def callback_query(call):
     if call.data == 'post_to_channel' or call.data == 'post_to_all':
         try:
             bot.copy_message(cfg.telegram_chat_id, call.message.chat.id, call.message.message_id)
+            if not call.data == 'post_to_all':
+                bot.answer_callback_query(call.id, 'Posted to Telegram channel')
         except Exception as e:
             bot_logger.error(e)
             bot.answer_callback_query(call.id, 'Error posting to channel')
