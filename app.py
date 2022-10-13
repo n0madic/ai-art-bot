@@ -229,13 +229,16 @@ def command_generate(message):
                 job.delete_message = msg.message_id
 
 
-@bot.message_handler(chat_id=cfg.telegram_admin_ids, content_types=['document'], func=lambda m: m.document.file_name == 'ideas.txt')
+@bot.message_handler(chat_id=cfg.telegram_admin_ids, content_types=['document'], func=lambda m: m.document.file_name.endswith('.txt'))
 def handle_ideas_update(message):
-    file_info = bot.get_file(message.document.file_id)
-    downloaded_file = bot.download_file(file_info.file_path)
-    with open('ideas.txt', 'wb') as f:
-        f.write(downloaded_file)
-    bot.send_message(message.chat.id, 'Ideas updated')
+    if not os.path.exists(message.document.file_name):
+        bot.send_message(message.chat.id, 'File {} not found!'.format(message.document.file_name))
+    else:
+        file_info = bot.get_file(message.document.file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
+        with open(message.document.file_name, 'wb') as f:
+            f.write(downloaded_file)
+        bot.send_message(message.chat.id, 'File {} updated'.format(message.document.file_name))
     bot.delete_message(message.chat.id, message.message_id)
 
 

@@ -17,7 +17,7 @@ RUN pip install --prefer-binary --no-cache-dir -r requirements.txt && \
 COPY gfpgan /app/gfpgan
 COPY realesrgan /app/realesrgan
 COPY *.py /app/
-COPY ideas.txt /app/
+COPY ideas.txt ignores.txt /app/
 
 VOLUME /root/.cache/huggingface
 

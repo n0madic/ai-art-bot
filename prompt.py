@@ -17,6 +17,9 @@ def generate(starting_text='', max_length=100, random_prompt_probability=config.
     with open('ideas.txt', 'r') as f:
         ideas = f.readlines()
 
+    with open('ignores.txt', 'r') as f:
+        ignores = [line.rstrip() for line in f]
+
     if starting_text == '' and random.random() > random_prompt_probability:
         starting_text: str = ideas[random.randrange(0, len(ideas))].replace('\n', '')
         starting_text: str = re.sub(r'[,:\-–.!;?_]', '', starting_text)
@@ -33,7 +36,8 @@ def generate(starting_text='', max_length=100, random_prompt_probability=config.
             resp = r['generated_text'].strip()
             if resp and resp != starting_text and len(resp) > (len(starting_text) * 2) and not resp.endswith((':', '-', '—')) and not resp.find('--'):
                 continue
-            responses.append(resp)
+            if not any([i.lower() in resp.lower() for i in ignores]):
+                responses.append(resp)
         for r in responses:
             response_end = r.strip(string.punctuation)
             response_end = re.sub(r'[^ ]+\.[^ ]+','', response_end)
