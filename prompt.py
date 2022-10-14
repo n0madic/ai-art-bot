@@ -11,8 +11,7 @@ used_prompts = []
 
 
 def generate(starting_text='', max_length=100, random_prompt_probability=config.cfg.random_prompt_probability):
-    seed = random.randint(100, 1000000)
-    transformers.set_seed(seed)
+    transformers.set_seed(random.SystemRandom().randint(100, 1000000))
 
     with open('ideas.txt', 'r') as f:
         ideas = f.readlines()
