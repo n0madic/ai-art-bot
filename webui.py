@@ -4,10 +4,10 @@ import gradio
 import prompt
 
 
-def webui_fn(prompt_input, scale, steps, seed, enhancements):
+def webui_fn(prompt_input, negative_prompt, scale, steps, seed, enhancements):
     if not prompt_input or prompt_input.endswith('+'):
         prompt_input = prompt.generate(prompt_input.removesuffix('+'))
-    image = diffusion.generate(prompt_input, seed=seed, scale=scale, steps=steps)
+    image = diffusion.generate(prompt_input, negative_prompt, seed=seed, scale=scale, steps=steps)
     message = '{} (seed={} scale={} steps={})'.format(prompt_input, image.info['seed'], image.info['scale'], image.info['steps'])
     if 'Upscale' in enhancements or 'Face restore' in enhancements:
         image = enhancement.upscale(image, face_restore='Face restore' in enhancements)
@@ -18,7 +18,8 @@ gr = gradio.Interface(
     fn=webui_fn,
     inputs=[
         gradio.Textbox(placeholder="Place your input prompt here", label="Input Prompt"),
-        gradio.Slider(0, 20, 7.5, step=0.5, label="Guidance Scale"),
+        gradio.Textbox(value=diffusion.get_negative_prompt(), label="Negative Prompt"),
+        gradio.Slider(0, 20, 7.5, step=0.1, label="Guidance Scale"),
         gradio.Slider(1, 200, 50, step=1, label="Steps"),
         gradio.Number(None, label="Seed", precision=0),
         gradio.CheckboxGroup(['Upscale', 'Face restore'], label="Enhancements"),

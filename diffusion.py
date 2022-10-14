@@ -1,4 +1,5 @@
 from diffusers import StableDiffusionPipeline,LMSDiscreteScheduler
+import os
 import random
 import torch
 import sys
@@ -8,21 +9,30 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 sd_model_id = 'CompVis/stable-diffusion-v1-4'
 
 scheduler = LMSDiscreteScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear")
-pipe = StableDiffusionPipeline.from_pretrained(sd_model_id, use_auth_token=True)
+pipe = StableDiffusionPipeline.from_pretrained(sd_model_id)
 pipe.safety_checker = lambda images, **kwargs: (images, False)
 pipe.to(device)
 lock = threading.Lock()
 
 
-def generate(prompt, seed, scale=7.5, steps=50):
-    seed = seed or random.randint(0, 2**32 - 1)
+def get_negative_prompt(filename='negative.txt'):
+    if os.path.exists(filename):
+        with open(filename, 'r') as f:
+            return ', '.join([line.rstrip() for line in f])
+    else:
+        return ''
+
+
+def generate(prompt, negative_prompt=get_negative_prompt(), seed=0, scale=7.5, steps=50):
+    seed = seed or random.SystemRandom().randint(0, 2**32 - 1)
     try:
         lock.acquire()
         generator = torch.Generator(device=device).manual_seed(int(seed))
         if device.type == 'cuda':
             with torch.autocast('cuda'):
                 image = pipe(
-                    [prompt],
+                    prompt,
+                    negative_prompt=negative_prompt,
                     num_inference_steps=steps,
                     guidance_scale=scale,
                     generator=generator,
@@ -30,7 +40,8 @@ def generate(prompt, seed, scale=7.5, steps=50):
                 ).images[0]
         else:
             image = pipe(
-                [prompt],
+                prompt,
+                negative_prompt=negative_prompt,
                 num_inference_steps=steps,
                 guidance_scale=scale,
                 generator=generator,

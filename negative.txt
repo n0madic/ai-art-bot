@@ -1,0 +1,20 @@
+bad anatomy
+blur
+blurred
+cropped
+duplicate
+extra limbs
+fused fingers
+jpeg artifacts
+low quality
+lowres
+missing arms
+missing legs
+out of frame
+poorly drawn face
+signature
+text
+tiling
+ugly
+watermark
+worst quality
