@@ -104,6 +104,7 @@ Cute cartoon character
 Cute creature
 Cute creatures
 Cute girl
+Cyberpunk 2077
 Cyberpunk city
 Cyberpunk cityscape
 Cyborg
@@ -266,6 +267,7 @@ Nebula
 Niagara falls
 Night motel
 Nightclub
+Noah's Ark
 Nuclear apocalypse
 Nuclear explosion in the city
 Nuclear explosions in the city center, aerial view
@@ -323,6 +325,10 @@ Sea monster
 Secret flower garden
 Secret laboratory
 Secret underground bunker
+Ship crashed
+Ship crashed on an alien planet
+Shipwreck
+Silent hill
 Skull
 Small town surrounded by mountains
 Snow globe
@@ -401,6 +407,7 @@ Village in the woods
 Village on the coast
 Virtual reality
 Volcano eruption
+Volcano eruption in the middle of the city
 War of the worlds
 Warrior of light with angel wings
 Waterfall
