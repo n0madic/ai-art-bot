@@ -6,7 +6,7 @@ import sys
 import threading
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-sd_model_id = 'CompVis/stable-diffusion-v1-4'
+sd_model_id = 'runwayml/stable-diffusion-v1-5'
 
 scheduler = LMSDiscreteScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear")
 pipe = StableDiffusionPipeline.from_pretrained(sd_model_id)
