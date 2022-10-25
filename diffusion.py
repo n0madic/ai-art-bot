@@ -23,7 +23,9 @@ def get_negative_prompt(filename='negative.txt'):
         return ''
 
 
-def generate(prompt, negative_prompt=get_negative_prompt(), seed=0, scale=7.5, steps=50):
+def generate(prompt, negative_prompt='', seed=0, scale=7.5, steps=50):
+    if not negative_prompt:
+        negative_prompt = get_negative_prompt()
     seed = seed or random.SystemRandom().randint(0, 2**32 - 1)
     try:
         lock.acquire()
