@@ -29,7 +29,11 @@ def generate(starting_text='', max_length=100, random_prompt_probability=config.
         used_prompts.append(starting_text)
 
     prompt = ''
+    tries = 0
     while not prompt:
+        if tries > 10:
+            print('ERROR: Could not find a prompt!')
+            return
         responses = []
         for r in gpt2_pipe(starting_text, max_length=random.randint(60, max_length), num_return_sequences=4):
             resp = r['generated_text'].strip()
@@ -50,6 +54,7 @@ def generate(starting_text='', max_length=100, random_prompt_probability=config.
             if response_end and len(response_end) > 20:
                 prompt = response_end
                 break
+        tries += 1
     return prompt
 
 

@@ -275,7 +275,11 @@ def callback_query(call):
 def prompt_worker(chat_id, sleep_time=600):
     while True:
         if not cfg.command_only_mode:
-            worker_queue.put(Job(prompt.generate(), chat_id))
+            prmpt = prompt.generate()
+            if prmpt:
+                worker_queue.put(Job(prompt.generate(), chat_id))
+            else:
+                bot_logger.warning('Prompt generation failed')
         time.sleep(sleep_time)
 
 
