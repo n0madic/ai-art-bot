@@ -12,7 +12,7 @@ realesrgan_model_path = 'realesrgan/RealESRGAN_x4plus.pth'
 realesrgan_model = RRDBNet(num_in_ch=3, num_out_ch=3, num_feat=64, num_block=23, num_grow_ch=32, scale=4)
 upsampler = RealESRGANer(scale=4, model_path=realesrgan_model_path, model=realesrgan_model)
 
-face_enhancer_model_path = 'gfpgan/GFPGANv1.3.pth'
+face_enhancer_model_path = 'gfpgan/GFPGANv1.4.pth'
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 face_enhancer = GFPGANer(model_path=face_enhancer_model_path, upscale=4, arch='clean', bg_upsampler=upsampler)
 face_enhancer_no_scale = GFPGANer(model_path=face_enhancer_model_path, upscale=1, arch='clean')
