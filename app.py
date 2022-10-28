@@ -111,7 +111,7 @@ def instagram_send(image_path, message):
     bot_logger.info('Send image to Instagram...')
     try:
         resp = insta.photo_upload(image_path, caption=message)
-    except instagrapi.exceptions.ChallengeRequired as e:
+    except (instagrapi.exceptions.ChallengeRequired, instagrapi.exceptions.ClientForbiddenError) as e:
         bot_logger.error(e)
         insta.logout()
         insta_logged = False
