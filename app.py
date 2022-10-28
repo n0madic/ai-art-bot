@@ -15,6 +15,7 @@ import telebot
 import textwrap
 import threading
 import time
+import torch
 import twitter
 import webui
 
@@ -244,8 +245,16 @@ def handle_ideas_update(message):
 
 @bot.callback_query_handler(func=lambda call: call.from_user.id in cfg.telegram_admin_ids)
 def callback_query(call):
-    sended = False
     image_path = os.path.join(cfg.image_cache_dir, '{}.jpg'.format(call.message.message_id))
+    if call.data == 'fixface':
+        image = enhancement.fixface(image_path)
+        image.save(image_path)
+        lines = call.message.caption.splitlines()
+        caption = '\n'.join(['<code>{}</code>'.format(lines[0]), re.sub(r'\d+\.?\d+', r'<code>\g<0></code>', lines[1])])
+        bot.edit_message_media(media=telebot.types.InputMediaPhoto(open(image_path, 'rb'), caption=caption, parse_mode='HTML'), chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=call.message.reply_markup)
+        bot.answer_callback_query(call.id, 'Face fixed')
+        return
+    sended = False
     if call.data == 'post_to_channel' or call.data == 'post_to_all':
         try:
             bot.copy_message(cfg.telegram_chat_id, call.message.chat.id, call.message.message_id)
@@ -277,7 +286,7 @@ def prompt_worker(chat_id, sleep_time=600):
         if not cfg.command_only_mode:
             prmpt = prompt.generate()
             if prmpt:
-                worker_queue.put(Job(prompt.generate(), chat_id))
+                worker_queue.put(Job(prmpt, chat_id))
             else:
                 bot_logger.warning('Prompt generation failed')
         time.sleep(sleep_time)
@@ -295,6 +304,11 @@ def main_loop():
             except IndexError as e:
                 bot_logger.error(e)
                 job.steps += 1
+                worker_queue.put(job)
+                continue
+            except RuntimeError as e:
+                bot_logger.error(e)
+                torch.cuda.empty_cache()
                 worker_queue.put(job)
                 continue
             except Exception as e:
@@ -317,11 +331,14 @@ def main_loop():
                     bot_logger.error(e)
             if is_admin_chat or is_turbo_mode:
                 markup = telebot.types.InlineKeyboardMarkup()
-                buttons = [telebot.types.InlineKeyboardButton("Telegram", callback_data="post_to_channel")]
+                buttons = [
+                    telebot.types.InlineKeyboardButton("Fix face", callback_data="fixface"),
+                    telebot.types.InlineKeyboardButton("Tg", callback_data="post_to_channel"),
+                    ]
                 if insta_logged:
-                    buttons.append(telebot.types.InlineKeyboardButton("Instagram", callback_data="post_to_instagram"))
+                    buttons.append(telebot.types.InlineKeyboardButton("Insta", callback_data="post_to_instagram"))
                 if twitter_api:
-                    buttons.append(telebot.types.InlineKeyboardButton("Twitter", callback_data="post_to_twitter"))
+                    buttons.append(telebot.types.InlineKeyboardButton("Twtr", callback_data="post_to_twitter"))
                 if len(buttons) > 1:
                     buttons.append(telebot.types.InlineKeyboardButton("ALL", callback_data="post_to_all"))
                 markup.add(*buttons, row_width=len(buttons))

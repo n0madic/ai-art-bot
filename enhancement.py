@@ -5,14 +5,17 @@ from PIL import Image
 import config
 import cv2
 import numpy
+import os
 
 
 realesrgan_model_path = 'realesrgan/RealESRGAN_x4plus.pth'
 realesrgan_model = RRDBNet(num_in_ch=3, num_out_ch=3, num_feat=64, num_block=23, num_grow_ch=32, scale=4)
 upsampler = RealESRGANer(scale=4, model_path=realesrgan_model_path, model=realesrgan_model)
 
+face_enhancer_model_path = 'gfpgan/GFPGANv1.3.pth'
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-face_enhancer = GFPGANer(model_path='gfpgan/GFPGANv1.3.pth', upscale=4, arch='clean', channel_multiplier=2, bg_upsampler=upsampler)
+face_enhancer = GFPGANer(model_path=face_enhancer_model_path, upscale=4, arch='clean', bg_upsampler=upsampler)
+face_enhancer_no_scale = GFPGANer(model_path=face_enhancer_model_path, upscale=1, arch='clean')
 
 
 def face_presence_detection(image):
@@ -23,6 +26,17 @@ def face_presence_detection(image):
         return len(faces) > 0
     else:
         return False
+
+
+def fixface(image):
+    if type(image) == str and os.path.exists(image):
+        image = Image.open(image)
+    info = image.info
+    image = numpy.array(image)
+    _, _, image = face_enhancer_no_scale.enhance(image)
+    image = Image.fromarray(image)
+    image.info = info
+    return image
 
 
 def upscale(image, face_restore=False):
