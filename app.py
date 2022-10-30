@@ -246,13 +246,23 @@ def handle_ideas_update(message):
 @bot.callback_query_handler(func=lambda call: call.from_user.id in cfg.telegram_admin_ids)
 def callback_query(call):
     image_path = os.path.join(cfg.image_cache_dir, '{}.jpg'.format(call.message.message_id))
-    if call.data == 'fixface':
-        image = enhancement.fixface(image_path)
-        image.save(image_path)
+    if call.data == 'fix_face' or call.data == 'undo_face':
+        reply_markup = call.message.reply_markup
+        if call.data == 'fix_face':
+            image = enhancement.fixface(image_path)
+            os.replace(image_path, image_path + '.bak')
+            image.save(image_path)
+            reply_markup.keyboard[0][0] = telebot.types.InlineKeyboardButton("Undo fix", callback_data="undo_face")
+        else:
+            os.replace(image_path + '.bak', image_path)
+            reply_markup.keyboard[0][0] = telebot.types.InlineKeyboardButton("Face fix", callback_data="facefix")
         lines = call.message.caption.splitlines()
         caption = '\n'.join(['<code>{}</code>'.format(lines[0]), re.sub(r'\d+\.?\d+', r'<code>\g<0></code>', lines[1])])
-        bot.edit_message_media(media=telebot.types.InputMediaPhoto(open(image_path, 'rb'), caption=caption, parse_mode='HTML'), chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=call.message.reply_markup)
-        bot.answer_callback_query(call.id, 'Face fixed')
+        bot.edit_message_media(media=telebot.types.InputMediaPhoto(open(image_path, 'rb'), caption=caption, parse_mode='HTML'), chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=reply_markup)
+        if call.data == 'fix_face':
+            bot.answer_callback_query(call.id, 'Face fixed')
+        else:
+            bot.answer_callback_query(call.id, 'Undo face fix')
         return
     sended = False
     if call.data == 'post_to_channel' or call.data == 'post_to_all':
@@ -332,7 +342,7 @@ def main_loop():
             if is_admin_chat or is_turbo_mode:
                 markup = telebot.types.InlineKeyboardMarkup()
                 buttons = [
-                    telebot.types.InlineKeyboardButton("Fix face", callback_data="fixface"),
+                    telebot.types.InlineKeyboardButton("Fix face", callback_data="fix_face"),
                     telebot.types.InlineKeyboardButton("Tg", callback_data="post_to_channel"),
                     ]
                 if insta_logged:
