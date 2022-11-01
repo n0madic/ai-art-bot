@@ -258,7 +258,7 @@ def callback_query(call):
             reply_markup.keyboard[0][0] = telebot.types.InlineKeyboardButton("Undo fix", callback_data="undo_face")
         else:
             os.replace(image_path + '.bak', image_path)
-            reply_markup.keyboard[0][0] = telebot.types.InlineKeyboardButton("Face fix", callback_data="facefix")
+            reply_markup.keyboard[0][0] = telebot.types.InlineKeyboardButton("Face fix", callback_data="fix_face")
         lines = call.message.caption.splitlines()
         caption = '\n'.join(['<code>{}</code>'.format(lines[0]), re.sub(r'\d+\.?\d+', r'<code>\g<0></code>', lines[1])])
         bot.edit_message_media(media=telebot.types.InputMediaPhoto(open(image_path, 'rb'), caption=caption, parse_mode='HTML'), chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=reply_markup)
