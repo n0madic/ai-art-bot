@@ -18,11 +18,15 @@ class Config:
                         os.environ[key] = value
 
         self.command_only_mode = os.getenv('COMMAND_ONLY_MODE', 'false').lower() in ['true', 'on', 'yes', '1']
+        self.face_enhancer_arch = os.getenv('FACE_ENHANCER_ARCH', 'CodeFormer')
+        self.face_enhancer_model_path = os.getenv('FACE_ENHANCER_MODEL_PATH', 'gfpgan/CodeFormer.pth')
         self.face_restoring = os.getenv('FACE_RESTORING', 'false').lower() in ['true', 'on', 'yes', '1']
         self.instagram_username = os.getenv('INSTAGRAM_USERNAME')
         self.instagram_password = os.getenv('INSTAGRAM_PASSWORD')
         self.image_cache_dir = os.getenv('IMAGE_CACHE_DIR', 'imagecache')
         self.random_prompt_probability = float(os.getenv('RANDOM_PROMPT_PROBABILITY', 0.5))
+        self.realesrgan_model_path = os.getenv('REALESRGAN_MODEL_PATH', 'realesrgan/RealESRGAN_x4plus.pth')
+        self.sd_model_id = os.getenv('SD_MODEL_ID', 'runwayml/stable-diffusion-v1-5')
         self.sleep_time = float(os.getenv('SLEEP_TIME', 600))
         self.telegram_token = os.getenv('TELEGRAM_TOKEN')
         telegram_admin_id = os.getenv('TELEGRAM_ADMIN_ID')

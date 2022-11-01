@@ -7,11 +7,15 @@ The app generates random images using AI [Stable Diffusion](https://github.com/C
 Environment variables:
 
 * `COMMAND_ONLY_MODE` - bot command mode only
+* `FACE_ENHANCER_ARCH` - face enhancer architecture
+* `FACE_ENHANCER_MODEL_PATH` - face enhancer model path for GFPGAN
 * `FACE_RESTORING` - restoring faces in an image with [GFPGAN](https://github.com/TencentARC/GFPGAN) (required enabled `UPSCALING`)
 * `HUGGING_FACE_HUB_TOKEN` - token for Hugging Face for downloading models
 * `INSTAGRAM_USERNAME` - Instagram username
 * `INSTAGRAM_PASSWORD` - Instagram password
 * `RANDOM_PROMPT_PROBABILITY` - probability of generate full random prompt without ideas (default `0.5`)
+* `REALESRGAN_MODEL_PATH` - model path for RealESRGAN
+* `SD_MODEL_ID` - Hugging Face model id for Stable Diffusion
 * `SLEEP_TIME` - how many seconds to sleep between generations (default 600s)
 * `TELEGRAM_TOKEN` - Telegram bot token
 * `TELEGRAM_ADMIN_ID` - user ID to manage the bot
