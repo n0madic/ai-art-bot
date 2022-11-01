@@ -127,6 +127,7 @@ Epic battle
 Eternity
 Ethernal tresculpture
 Exosuit
+Exoplanet
 Extraterrestrial civilization
 Extraterrestrial civilization conquers space
 Extraterrestrial landscape
@@ -162,6 +163,7 @@ Gas station on Mars
 Geyser on mars
 Ghost in the shell
 Ghost town
+Giant isopod
 Giant monster destroying city
 Giant pyramid in desert
 Giant robot
@@ -229,12 +231,10 @@ Magic reflection mirror
 Male portrait
 Man looking out the window watching a nuclear explosion in the distance
 Mars colony
-Mars rover
 Mech warrior
 Mecha
 Medieval cities on fire
 Misty valley
-Modern cityscape
 Modern cityscape
 Modern house
 Modern house with a swimming pool
@@ -333,7 +333,11 @@ Skull
 Small town surrounded by mountains
 Snow globe
 Space base on an asteroid
-Space base on Moon
+Space base on moon
+Space city
+Space colony
+Space colony on an asteroid
+Space colony on the moon
 Space monster
 Space station in orbit
 Spaceship in a hangar
