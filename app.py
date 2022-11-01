@@ -247,6 +247,9 @@ def handle_ideas_update(message):
 def callback_query(call):
     image_path = os.path.join(cfg.image_cache_dir, '{}.jpg'.format(call.message.message_id))
     if call.data == 'fix_face' or call.data == 'undo_face':
+        if not os.path.exists(image_path):
+            bot.answer_callback_query(call.id, 'Image not found')
+            return
         reply_markup = call.message.reply_markup
         if call.data == 'fix_face':
             image = enhancement.fixface(image_path)
