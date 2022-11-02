@@ -1,3 +1,4 @@
+from diffusers.models import AutoencoderKL
 from diffusers import StableDiffusionPipeline,LMSDiscreteScheduler
 import config
 import os
@@ -9,7 +10,8 @@ import threading
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 scheduler = LMSDiscreteScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear")
-pipe = StableDiffusionPipeline.from_pretrained(config.cfg.sd_model_id)
+vae = AutoencoderKL.from_pretrained("stabilityai/sd-vae-ft-mse")
+pipe = StableDiffusionPipeline.from_pretrained(config.cfg.sd_model_id, vae=vae)
 pipe.safety_checker = lambda images, **kwargs: (images, False)
 pipe.to(device)
 lock = threading.Lock()
