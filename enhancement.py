@@ -31,7 +31,7 @@ def fixface(image):
         image = Image.open(image)
     info = image.info
     image = numpy.array(image)
-    _, _, image = face_enhancer_no_scale.enhance(image, weight=0.1)
+    _, _, image = face_enhancer_no_scale.enhance(image, weight=0.2)
     image = Image.fromarray(image)
     image.info = info
     return image
