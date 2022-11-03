@@ -24,6 +24,7 @@ class Config:
         self.instagram_username = os.getenv('INSTAGRAM_USERNAME')
         self.instagram_password = os.getenv('INSTAGRAM_PASSWORD')
         self.image_cache_dir = os.getenv('IMAGE_CACHE_DIR', 'imagecache')
+        self.low_vram = os.getenv('LOW_VRAM', 'false').lower() in ['true', 'on', 'yes', '1']
         self.random_prompt_probability = float(os.getenv('RANDOM_PROMPT_PROBABILITY', 0.5))
         self.realesrgan_model_path = os.getenv('REALESRGAN_MODEL_PATH', 'realesrgan/RealESRGAN_x4plus.pth')
         self.sd_model_id = os.getenv('SD_MODEL_ID', 'runwayml/stable-diffusion-v1-5')

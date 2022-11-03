@@ -7,11 +7,18 @@ import torch
 import sys
 import threading
 
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 scheduler = LMSDiscreteScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear")
 vae = AutoencoderKL.from_pretrained("stabilityai/sd-vae-ft-mse")
-pipe = StableDiffusionPipeline.from_pretrained(config.cfg.sd_model_id, vae=vae)
+if config.cfg.low_vram:
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cuda.matmul.allow_tf32 = True
+    pipe = StableDiffusionPipeline.from_pretrained(config.cfg.sd_model_id, vae=vae, revision="fp16", torch_dtype=torch.float16)
+    pipe.enable_attention_slicing()
+else:
+    pipe = StableDiffusionPipeline.from_pretrained(config.cfg.sd_model_id, vae=vae)
 pipe.safety_checker = lambda images, **kwargs: (images, False)
 pipe.to(device)
 lock = threading.Lock()
