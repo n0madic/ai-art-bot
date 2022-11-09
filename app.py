@@ -398,7 +398,8 @@ if __name__ == '__main__':
         threading.Thread(target=instagram_login).start()
     if len(sys.argv) > 1:
         worker_queue.put(Job(sys.argv[1], cfg.telegram_chat_id))
-    threading.Thread(target=prompt_worker, args=(cfg.telegram_chat_id, cfg.sleep_time), daemon=True).start()
+    if not cfg.premoderation:
+        threading.Thread(target=prompt_worker, args=(cfg.telegram_chat_id, cfg.sleep_time), daemon=True).start()
     if cfg.telegram_turbo_chat_id:
         threading.Thread(target=prompt_worker, args=(cfg.telegram_turbo_chat_id, cfg.turbo_sleep_time), daemon=True).start()
     if len(cfg.telegram_admin_ids) > 0:
