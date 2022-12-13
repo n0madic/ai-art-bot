@@ -10,7 +10,6 @@ import threading
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-scheduler = LMSDiscreteScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear")
 vae = AutoencoderKL.from_pretrained("stabilityai/sd-vae-ft-mse")
 if config.cfg.low_vram:
     torch.backends.cudnn.benchmark = True
@@ -20,6 +19,7 @@ if config.cfg.low_vram:
 else:
     pipe = StableDiffusionPipeline.from_pretrained(config.cfg.sd_model_id, vae=vae)
 pipe.safety_checker = lambda images, **kwargs: (images, False)
+pipe.scheduler = LMSDiscreteScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear")
 pipe.to(device)
 lock = threading.Lock()
 
@@ -46,8 +46,7 @@ def generate(prompt, negative_prompt='', seed=0, scale=7.5, steps=50):
                     negative_prompt=negative_prompt,
                     num_inference_steps=steps,
                     guidance_scale=scale,
-                    generator=generator,
-                    scheduler=scheduler
+                    generator=generator
                 ).images[0]
         else:
             image = pipe(
@@ -55,8 +54,7 @@ def generate(prompt, negative_prompt='', seed=0, scale=7.5, steps=50):
                 negative_prompt=negative_prompt,
                 num_inference_steps=steps,
                 guidance_scale=scale,
-                generator=generator,
-                scheduler=scheduler
+                generator=generator
             ).images[0]
     finally:
         lock.release()
