@@ -1,5 +1,5 @@
-from diffusers.models import AutoencoderKL
-from diffusers import StableDiffusionPipeline,LMSDiscreteScheduler
+from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
+from diffusers import StableDiffusionPipeline, EulerAncestralDiscreteScheduler
 import config
 import os
 import random
@@ -10,16 +10,18 @@ import threading
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-vae = AutoencoderKL.from_pretrained("stabilityai/sd-vae-ft-mse")
+StableDiffusionSafetyChecker.forward = lambda self, clip_input, images: (
+    images, False)
+pipe = StableDiffusionPipeline.from_pretrained(
+    config.cfg.sd_model_id,
+    revision='fp16',
+    torch_dtype=torch.float16,
+)
 if config.cfg.low_vram:
     torch.backends.cudnn.benchmark = True
     torch.backends.cuda.matmul.allow_tf32 = True
-    pipe = StableDiffusionPipeline.from_pretrained(config.cfg.sd_model_id, vae=vae, revision="fp16", torch_dtype=torch.float16)
     pipe.enable_attention_slicing()
-else:
-    pipe = StableDiffusionPipeline.from_pretrained(config.cfg.sd_model_id, vae=vae)
-pipe.safety_checker = lambda images, **kwargs: (images, False)
-pipe.scheduler = LMSDiscreteScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear")
+pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
 pipe.to(device)
 lock = threading.Lock()
 
@@ -39,23 +41,13 @@ def generate(prompt, negative_prompt='', seed=0, scale=7.5, steps=50):
     try:
         lock.acquire()
         generator = torch.Generator(device=device).manual_seed(int(seed))
-        if device.type == 'cuda':
-            with torch.autocast('cuda'):
-                image = pipe(
-                    prompt,
-                    negative_prompt=negative_prompt,
-                    num_inference_steps=steps,
-                    guidance_scale=scale,
-                    generator=generator
-                ).images[0]
-        else:
-            image = pipe(
-                prompt,
-                negative_prompt=negative_prompt,
-                num_inference_steps=steps,
-                guidance_scale=scale,
-                generator=generator
-            ).images[0]
+        image = pipe(
+            prompt,
+            negative_prompt=negative_prompt,
+            num_inference_steps=steps,
+            guidance_scale=scale,
+            generator=generator
+        ).images[0]
     finally:
         lock.release()
     image.info['prompt'] = prompt
@@ -72,11 +64,7 @@ if __name__ == "__main__":
     else:
         prompt = "test"
     print(f'Generating image for prompt: {prompt}')
-    images = generate(prompt)
-    for i, image in enumerate(images):
-        if len(images) > 1:
-            filename = f"{prompt}_{i+1}.png"
-        else:
-            filename = f"{prompt}.png"
-        print(f'Saving {filename}...')
-        image.save(filename)
+    image = generate(prompt)
+    filename = f"{prompt}.png"
+    print(f'Saving {filename}...')
+    image.save(filename)

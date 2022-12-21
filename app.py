@@ -41,7 +41,7 @@ class Job:
             self.prompt = prompt.generate(self.prompt.removesuffix('+'), random_prompt_probability=cfg.random_prompt_probability)
         self.seed = params.get('seed', self.seed or random.randint(0, 2**32 - 1))
         self.scale = params.get('scale', self.scale or round(random.uniform(7,10), 1))
-        self.steps = params.get('steps', self.steps or random.randint(30,100))
+        self.steps = params.get('steps', self.steps or random.randint(20,100))
 
 
 logging.basicConfig(format='%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')

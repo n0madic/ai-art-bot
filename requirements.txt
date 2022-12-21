@@ -7,5 +7,6 @@ instagrapi>=1.16
 pyTelegramBotAPI
 python-twitter
 realesrgan
+safetensors
 scipy
 transformers

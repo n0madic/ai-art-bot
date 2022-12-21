@@ -28,7 +28,7 @@ class Config:
         self.premoderation = os.getenv('PREMODERATION', 'false').lower() in ['true', 'on', 'yes', '1']
         self.random_prompt_probability = float(os.getenv('RANDOM_PROMPT_PROBABILITY', 0.5))
         self.realesrgan_model_path = os.getenv('REALESRGAN_MODEL_PATH', 'realesrgan/RealESRGAN_x4plus.pth')
-        self.sd_model_id = os.getenv('SD_MODEL_ID', 'runwayml/stable-diffusion-v1-5')
+        self.sd_model_id = os.getenv('SD_MODEL_ID', 'stabilityai/stable-diffusion-2-1')
         self.sleep_time = float(os.getenv('SLEEP_TIME', 600))
         self.telegram_token = os.getenv('TELEGRAM_TOKEN')
         telegram_admin_id = os.getenv('TELEGRAM_ADMIN_ID')
