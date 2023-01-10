@@ -146,59 +146,36 @@ def start(message):
     bot.send_message(message.chat.id, 'Just type the text prompt for image generation\n\nUse the <code>+</code> symbol at the end of the query to expand it with random data, for example:\n<code>cat+</code>')
 
 
-@bot.message_handler(chat_id=cfg.telegram_admin_ids, commands=['chat'])
-def change_chat(message):
-    chat_id = message.text.split()[1]
-    if chat_id == '2me':
-        cfg.telegram_chat_id = message.chat.id
-        bot.send_message(message.chat.id, 'Target chat changed on this private chat')
-        return
-    if not chat_id.isdigit() and not chat_id.startswith('@'):
-        chat_id = '@' + chat_id
-    try:
-        resp = bot.get_chat(chat_id)
-    except telebot.apihelper.ApiException as e:
-        bot.send_message(message.chat.id, e)
+@bot.message_handler(chat_id=cfg.telegram_admin_ids, commands=['config'])
+def change_config(message):
+    parameter = message.text.split()[1].lower()
+    value = message.text.split()[2]
+    old_value = getattr(cfg, parameter, None)
+    if old_value:
+        if type(old_value) == bool:
+            value = True if value.lower() in ['true', 'on', 'yes', '1'] else False
+        elif type(old_value) == int:
+            value = int(value)
+        elif type(old_value) == float:
+            value = float(value)
+        setattr(cfg, parameter, value)
+        value = getattr(cfg, parameter)
+        bot.send_message(message.chat.id, 'Parameter {} changed to {}'.format(parameter, value))
+        if parameter == 'webui':
+            if cfg.webui:
+                _, _, share_url = webui.gr.launch(share=True, prevent_thread_lock=True)
+                bot.send_message(message.chat.id, 'WebUI enabled on {}'.format(share_url))
+            else:
+                webui.gr.close(verbose=True)
+                bot.send_message(message.chat.id, 'WebUI disabled')
     else:
-        cfg.telegram_chat_id = resp.id
-        bot.send_message(message.chat.id, 'Target chat changed on {}'.format(resp.title))
-
-
-@bot.message_handler(chat_id=cfg.telegram_admin_ids, commands=['command_mode'])
-def change_command_mode(message):
-    cfg.command_only_mode = message.text.split()[1].lower() == 'on'
-    if cfg.command_only_mode:
-        bot.send_message(message.chat.id, 'Command only mode enabled')
-    else:
-        bot.send_message(message.chat.id, 'Command only mode disabled')
-
-
-@bot.message_handler(chat_id=cfg.telegram_admin_ids, commands=['sleep'])
-def change_sleep(message):
-    sleep_text = message.text.split()[1].strip()
-    if sleep_text == 'reset':
-        cfg.sleep_time = float(os.getenv('SLEEP_TIME', 60))
-        bot.send_message(message.chat.id, 'Sleep time changed on default value')
-        return
-    cfg.sleep_time = float(sleep_text)
-    bot.send_message(message.chat.id, 'Sleep time changed on {:0.0f} sec'.format(cfg.sleep_time))
+        bot.send_message(message.chat.id, 'Parameter {} not found'.format(parameter))
 
 
 @bot.message_handler(chat_id=cfg.telegram_admin_ids, commands=['reset'])
 def change_sleep(message):
     cfg._load()
     bot.send_message(message.chat.id, 'Config reseted')
-
-
-@bot.message_handler(chat_id=cfg.telegram_admin_ids, commands=['webui'])
-def change_webui_mode(message):
-    cfg.webui = message.text.split()[1].lower() == 'on'
-    if cfg.webui:
-        _, _, share_url = webui.gr.launch(share=True, prevent_thread_lock=True)
-        bot.send_message(message.chat.id, 'WebUI enabled on {}'.format(share_url))
-    else:
-        webui.gr.close(verbose=True)
-        bot.send_message(message.chat.id, 'WebUI disabled')
 
 
 @bot.message_handler(chat_id=cfg.telegram_admin_ids, commands=['random'])
@@ -226,6 +203,7 @@ def command_generate(message):
             job.seed += i
             worker_queue.put(job)
             if prompt != job.prompt or i == batch - 1:
+                time.sleep(0.1)
                 msg = bot.send_message(message.chat.id, 'Put prompt <code>{}</code> in queue: {}'.format(job.prompt, worker_queue.qsize()), disable_notification=True)
                 job.delete_message = msg.message_id
 
