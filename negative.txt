@@ -10,6 +10,7 @@ low quality
 lowres
 missing arms
 missing legs
+monochrome
 out of frame
 poorly drawn face
 signature
