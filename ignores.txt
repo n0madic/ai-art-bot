@@ -4,6 +4,7 @@ agent 4 7 from hitman
 alan lee
 albert aublet
 alex gray
+alex grey
 alexander mcqueen
 alicia vikander as a battle
 alphonse mucha
@@ -35,10 +36,13 @@ charles vess
 chihiro iwasaki
 christopher lane
 cliff chiang
+cloisonnism
 color pallete
 communist propaganda
+conrad roset
 crochet
 daenerys targaryen
+damask pattern
 darth vader
 david cronenberg
 david hockney
@@ -51,6 +55,7 @@ ed roth
 edgar maxence
 edward hopper
 edwin longsden
+elon musk
 emblem patch
 ernst fuchs
 eldritch beauty
@@ -60,6 +65,7 @@ filipina prima ballerina
 floating coffin
 fractal
 frank sinatra
+game cannon
 gaspar noe
 gay bar
 geert goiris
@@ -76,6 +82,7 @@ gustave dore
 handsome
 hank hill
 happy mask salesman
+harp burning
 hatsune miku
 hieronymus bosch
 hindu
@@ -119,6 +126,8 @@ kintsugi
 kirokaze
 kit harris
 korean
+ladies in holograms
+lalisa manoban
 last supper
 laurie greasley
 lee griggs
@@ -127,7 +136,7 @@ lsd
 lucy liu
 magazine cover
 man ray
-mandalas
+mandala
 marcel duchamp
 marius borgeaud
 masami kurumada
@@ -147,6 +156,7 @@ motorcycle concept
 multiple human silhouettes
 murakami
 norman rockwell
+paisley
 paul klee
 paul robertson
 peter lloyd
@@ -183,6 +193,7 @@ sun god and moon goddess
 suzuki
 synthwave
 takato yamamoto
+taro yamamoto
 tarot
 tennis ball monster
 thom browne
@@ -195,6 +206,7 @@ triceratops
 trump
 user interface
 utagawa yoshiiku
+uuen
 van gogh
 vaporware
 vaporwave
