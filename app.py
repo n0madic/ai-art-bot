@@ -146,6 +146,12 @@ def start(message):
     bot.send_message(message.chat.id, 'Just type the text prompt for image generation\n\nUse the <code>+</code> symbol at the end of the query to expand it with random data, for example:\n<code>cat+</code>')
 
 
+@bot.message_handler(chat_id=cfg.telegram_admin_ids, commands=['die'])
+def die(message):
+    bot.send_message(message.chat.id, 'Bye!')
+    os._exit(0)
+
+
 @bot.message_handler(chat_id=cfg.telegram_admin_ids, commands=['config'])
 def change_config(message):
     parameter = message.text.split()[1].lower()
@@ -385,18 +391,7 @@ if __name__ == '__main__':
         bot_logger.info('Starting bot with username: {}'.format(user.username))
         if cfg.command_only_mode:
             bot_logger.info('Command only mode enabled')
-        bot.set_my_commands([
-            telebot.types.BotCommand('start', 'Start the bot'),
-            telebot.types.BotCommand('help', 'Show help message'),
-            telebot.types.BotCommand('chat', 'Change target chat ("2me" for this private chat)'),
-            telebot.types.BotCommand('command_mode', 'On/Off command only mode'),
-            telebot.types.BotCommand('sleep', 'Change sleep time'),
-            telebot.types.BotCommand('reset', 'Reset config'),
-            telebot.types.BotCommand('random', 'Generate random prompt'),
-            telebot.types.BotCommand('webui', 'WebUI on/off'),
-        ])
         bot.infinity_polling()
-        bot.delete_my_commands()
     else:
         if cfg.command_only_mode:
             bot_logger.error('Command only mode is enabled, but no admin ID is provided')
