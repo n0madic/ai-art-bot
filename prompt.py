@@ -19,14 +19,16 @@ def generate(starting_text='', max_length=100, random_prompt_probability=config.
     with open('ignores.txt', 'r') as f:
         ignores = [line.rstrip() for line in f]
 
-    if starting_text == '' and random.random() > random_prompt_probability:
-        starting_text: str = ideas[random.randrange(0, len(ideas))].replace('\n', '')
-        starting_text: str = re.sub(r'[,:\-–.!;?_]', '', starting_text)
-
     if len(ideas) == len(used_prompts):
         used_prompts.clear()
-    if starting_text:
-        used_prompts.append(starting_text)
+
+    if starting_text == '' and random.random() > random_prompt_probability:
+        while True:
+            starting_text = ideas[random.randrange(0, len(ideas))].replace('\n', '')
+            if starting_text not in used_prompts:
+                used_prompts.append(starting_text)
+                break
+        starting_text = re.sub(r'[,:\-–.!;?_]', '', starting_text)
 
     prompt = ''
     tries = 0
