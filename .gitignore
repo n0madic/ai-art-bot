@@ -4,3 +4,4 @@ test*
 *.png
 *.pth
 *.pyc
+venv
