@@ -10,3 +10,5 @@ realesrgan
 safetensors
 scipy
 transformers
+triton
+xformers

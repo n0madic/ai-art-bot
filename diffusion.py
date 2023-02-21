@@ -1,6 +1,8 @@
 from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
 from diffusers import StableDiffusionPipeline, EulerAncestralDiscreteScheduler
+from diffusers.utils.import_utils import is_xformers_available
 import config
+import logging
 import os
 import random
 import torch
@@ -21,6 +23,14 @@ if config.cfg.low_vram:
     torch.backends.cudnn.benchmark = True
     torch.backends.cuda.matmul.allow_tf32 = True
     pipe.enable_attention_slicing()
+if is_xformers_available():
+    try:
+        pipe.enable_xformers_memory_efficient_attention()
+    except Exception as e:
+        logging.warning(
+            'Could not enable memory efficient attention. Make sure xformers is installed'
+            ' correctly and a GPU is available: {e}'
+        )
 pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
 pipe.to(device)
 lock = threading.Lock()
