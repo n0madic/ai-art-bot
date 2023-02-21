@@ -230,6 +230,17 @@ def handle_ideas_update(message):
 @bot.callback_query_handler(func=lambda call: call.from_user.id in cfg.telegram_admin_ids)
 def callback_query(call):
     image_path = os.path.join(cfg.image_cache_dir, '{}.jpg'.format(call.message.message_id))
+    if not os.path.exists(image_path) and not call.data == 'post_to_channel':
+        try:
+            file_info = bot.get_file(call.message.photo[-1].file_id)
+            downloaded_file = bot.download_file(file_info.file_path)
+        except Exception as e:
+            bot_logger.error(e)
+            bot.answer_callback_query(call.id, 'Error downloading image')
+            return
+        else:
+            with open(image_path, 'wb') as f:
+                f.write(downloaded_file)
     if call.data == 'fix_face' or call.data == 'undo_face':
         if not os.path.exists(image_path):
             bot.answer_callback_query(call.id, 'Image not found')
@@ -262,17 +273,6 @@ def callback_query(call):
             bot.answer_callback_query(call.id, 'Error posting to channel')
         else:
             sended = True
-    if not os.path.exists(image_path):
-        try:
-            file_info = bot.get_file(call.message.photo[-1].file_id)
-            downloaded_file = bot.download_file(file_info.file_path)
-        except Exception as e:
-            bot_logger.error(e)
-            bot.answer_callback_query(call.id, 'Error downloading image')
-            return
-        else:
-            with open(image_path, 'wb') as f:
-                f.write(downloaded_file)
     if insta_logged and (call.data == 'post_to_instagram' or call.data == 'post_to_all'):
         sended = instagram_send(image_path, call.message.caption + '\n#aiart #stablediffusion')
         if sended:
