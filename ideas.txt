@@ -1,13 +1,16 @@
 1880s misty London street
-1950s diner
-3D render girl
+3D
+A beautiful
 A dank swamp with thorny brambles
 A dream of a distant galaxy
 A harbor with a concrete dock and a storage facility
 A haunted house
+A highly detailed matte painting
 A house built of clay, twigs, stones and straw
 A person on a bike in a thunderstorm
+A portrait of
 A Song of Ice and Fire
+Abandoned
 Abandoned amusement park
 Abandoned city street
 Abandoned factory
@@ -24,7 +27,9 @@ Abandoned village
 Abandoned warehouse
 Abandoned zoo
 Aerial view of a city
+Aesthetically pleasing
 Airship in steel armor
+Alien
 Alien invasion
 Alien jungle
 Alien planet
@@ -33,9 +38,9 @@ Alien spaceship
 Alien stalking prey in starship interior
 Alien world
 Aliens
-Aliens vs Predator
+Amazing
 Amusement park
-An astronaut riding a horse on mars
+An elegant
 An extremely complex machine
 Ancient castle
 Ancient temple
@@ -44,14 +49,13 @@ Another world
 Antropomorphic cyborg
 Artificial intelligence
 Artificial intelligence uprising
-Artificial planet
-Asteroid mining station
 Astronauts stranded on an alien planet
 Avatar
 Battlefield
 Battlemech
 Battletech
 Bearded skull
+Beautiful
 Beautiful flower meadow
 Beautiful garden
 Beautiful landscape
@@ -68,7 +72,8 @@ Burning house
 Burning house at sunset
 Burning house in the middle of a forest at night
 Call of Duty
-Camping bus in the beautiful mountains+
+Camping
+Camping in the beautiful mountains
 Candy land
 Cargo train
 Carnivorous plant on alien planet
@@ -76,13 +81,16 @@ Cat and mouse
 Cat eye
 Cave with a waterfall
 Central park
+Cinematic
 Cinematic fantasy landscape
+Cinematic landscape
+Cinematic scene
+Cinematic shot
 City
 City skyline across the water at sunset
 City street
-City under the dome
+Close-up
 Clouds
-Colonial marines
 Colossal giant tree growing out of the planet
 Comet crashes into a large metropolis
 Comic book character
@@ -111,19 +119,23 @@ Cyborg
 Cyborg woman
 Dark city
 Dark forest
-Days Gone
-Desert ghost town
 Desert sunrise
 Desolate wasteland
 Detailed portrait
 Diablo
-Dinosaur
+Digital painting of
 Dirty monster truck
 Disaster in the tunnel
 Distant galaxy
-Edge of Tomorrow
+Dramatic
+Elegant
 Elven princess
+Epic
 Epic battle
+Epic fantasy landscape
+Epic horror
+Epic scene
+Epic space battle
 Eternity
 Ethernal tresculpture
 Exosuit
@@ -134,6 +146,7 @@ Extraterrestrial landscape
 Extraterrestrial planet
 Extraterrestrial spaceship
 Extraterrestrial world
+Extremely detailed
 Fantasy
 Fantasy forest
 Fantasy landscape
@@ -158,7 +171,6 @@ Futuristic factory
 Futuristic landscape
 Futuristic ship in the ocean
 Futuristic tank
-Futuristic user interface
 Gas station on Mars
 Geyser on mars
 Ghost in the shell
@@ -171,49 +183,46 @@ Giant turtle with a village built in to it's shell
 Gingerbread house
 Girl
 Girl on a bicycle
+Glamorous
+God of
+Goddess
 Goddess of illusion
-Goodness gracious, great balls of fire
+Gorgeous
+Gothic
 Gothic castle
-Gothic cathedral
 Grand canyon
-Grand canyon at sunset
 Grand canyon with a river
 Hell
 Hell on earth
-Hellboy
 Hellish landscape
 High epic architecture
+Highly detailed
 Highly detailed portrait
 Hobbit village
 Hooded alien creature
 Hooded figure
-Horizon Zero Dawn
 Horror
 Horror movie
-House on wheels
+Horror scene
+Horror story
 Huge hole in the ground
 Huge iceberg in the ocean
 Huge monolith
 Huge monster
 Huge monster destroying a city
 Humanoid robot
-Humans in hill
 Hut inside the mountains valley
+Hyperrealistic
 Ice planet
-In a galaxy far, far away
 Incredibly monster
 Indigenous village on an alien planet
 Industrial city
 Insect alien
 Interior of engineering section on a starship
+Intricate
 Invasion
-Jungle temple
-Kaiju
-Kaiju battle
-Kitten in a box
-Klein bottle
+Jungle
 Labyrinth
-Large steampunk airship
 Last robot on earth
 Lava planet
 Lighthouse on a cliff in the fog
@@ -231,6 +240,8 @@ Magic reflection mirror
 Male portrait
 Man looking out the window watching a nuclear explosion in the distance
 Mars colony
+Masterpiece
+Matte painting
 Mech warrior
 Mecha
 Medieval cities on fire
@@ -266,7 +277,6 @@ National geographic photo
 Nebula
 Niagara falls
 Night motel
-Nightclub
 Noah's Ark
 Nuclear apocalypse
 Nuclear explosion in the city
@@ -276,24 +286,24 @@ Nuclear power plant
 Nuclear wasteland
 Nuclear winter landscape
 Oasis in the desert
-Ocean planet
 Ocean surface
-Oil rig in the ocean
+Oil painting
 Old cars in reflection asphalt
 Old train station
 Ominous cabin
 Orbital space station
 Outer space
+Overgrown
 Overgrown city covered in vines and moss
 Overgrown city with a skyscraper
 Paradise
 Paradise in hell
 Paradise island
-Photo beautiful girl
 Pirate ship enters the bay
 Pirate spaceship
 Planet Earth
 Planet Mars
+Planet of the apes
 Planet with a huge volcano
 Plastic bottle filled with magical or fairytale trees
 Portal
@@ -304,8 +314,8 @@ Post-apocalyptic skyscraper
 Post-apocalyptic village
 Post-apocalyptic wasteland
 Power plant
+Predator
 Prehistoric underwater world with predatory creatures
-Prehistoric world
 Prison
 Rainbow road
 Rainy city street
@@ -315,39 +325,35 @@ Rainy mountain road
 Ravaged city
 Ravaged city with a huge tower
 Ravaged ship in the ocean
-Retro arcade
-Retro diner
+Realistic
 River in the jungle
-Robot warrior in epic battle
-Robotic
 Scientific illustration
 Sea monster
 Secret flower garden
 Secret laboratory
 Secret underground bunker
 Ship crashed
-Ship crashed on an alien planet
 Shipwreck
 Silent hill
 Skull
 Small town surrounded by mountains
 Snow globe
-Space base on an asteroid
-Space base on moon
+Space base
 Space city
 Space colony
-Space colony on an asteroid
-Space colony on the moon
+Space military base
 Space monster
 Space station in orbit
 Spaceship in a hangar
 Sparse woods
 Starcraft
+Starship crashed on an alien planet
 Starship entering hyperspace
 Starship interior
 Starship lands on the surface of the planet
 Steampunk city
 Steampunk factory
+Stunning
 Sunrise over the mountains
 Sunset over the bay
 Sunset over the ocean
@@ -355,10 +361,9 @@ Superhero
 Supernova explosion in the sky above the city
 Swamp
 Swamp planet
+Super
 Synthwave ice fire portrait
-Tavern
-Terminator
-The airship crashed and burning in a field
+The
 The angel of death
 The cinematic composition
 The end of the world
@@ -370,11 +375,8 @@ The forest of the dead
 The last man on earth
 The Last of Us
 The Legend of Zelda
-The Maze Runner
+The most beautiful
 The view from the bridge of a starship cockpit
-The Walking Dead
-The witcher
-The Wizard of Oz
 The world of the future
 Throne room
 Tomb raider
@@ -382,6 +384,7 @@ Tornado in desert
 Totoro
 Toxic slime forest with mushrooms world in fog
 Train
+Tropical
 Tropical beach
 Tropical beach with rocks
 Tropical island paradise with a palm tree
@@ -395,8 +398,13 @@ Tsunami crashing over city
 Tunnel in the mountain
 Tunnel with a light at the end
 UFO hovering over the house
+Ultra
+Ultra detailed
 Ultra detailed close up facial portrait of
+Underground
 Underground cave
+Underground city
+Underwater
 Underwater city
 Underwater landscape
 Underwater world
@@ -428,4 +436,3 @@ Winter landscape
 Winter landscape with a pine forest
 Wizard's tower in a fantasy landscape
 Xenomorph
-Zombie apocalypse
