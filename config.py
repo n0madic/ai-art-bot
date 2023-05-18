@@ -27,6 +27,8 @@ class Config:
         self.image_cache_dir = os.getenv('IMAGE_CACHE_DIR', 'imagecache')
         self.low_vram = os.getenv('LOW_VRAM', 'false').lower() in ['true', 'on', 'yes', '1']
         self.premoderation = os.getenv('PREMODERATION', 'false').lower() in ['true', 'on', 'yes', '1']
+        self.prompt_model_id = os.getenv('PROMPT_MODEL_ID', 'Gustavosta/MagicPrompt-Stable-Diffusion')
+        self.prompt_model_tokenizer = os.getenv('PROMPT_MODEL_TOKENIZER', 'gpt2')
         self.random_prompt_probability = float(os.getenv('RANDOM_PROMPT_PROBABILITY', 0.5))
         self.realesrgan_model_path = os.getenv('REALESRGAN_MODEL_PATH', 'realesrgan/RealESRGAN_x4plus.pth')
         self.sd_model_id = os.getenv('SD_MODEL_ID', 'stabilityai/stable-diffusion-2-1')
@@ -44,7 +46,6 @@ class Config:
         self.twitter_consumer_secret = os.getenv('TWITTER_CONSUMER_SECRET')
         self.twitter_access_token = os.getenv('TWITTER_ACCESS_TOKEN')
         self.twitter_access_token_secret = os.getenv('TWITTER_ACCESS_TOKEN_SECRET')
-        self.webui = os.getenv('WEBUI', 'false').lower() in ['true', 'on', 'yes', '1']
         self.upscaling = os.getenv('UPSCALING', 'true').lower() in ['true', 'on', 'yes', '1']
 
 

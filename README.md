@@ -15,6 +15,9 @@ Environment variables:
 * `INSTAGRAM_USERNAME` - Instagram username
 * `INSTAGRAM_PASSWORD` - Instagram password
 * `LOW_VRAM` - low video RAM mode
+* `PREMODERATION` - premoderation mode (post only in turbo chat)
+* `PROMPT_MODEL_ID` - Hugging Face model id for prompt
+* `PROMPT_MODEL_TOKENIZER` - Hugging Face model tokenizer for prompt
 * `RANDOM_PROMPT_PROBABILITY` - probability of generate full random prompt without ideas (default `0.5`)
 * `REALESRGAN_MODEL_PATH` - model path for RealESRGAN
 * `SD_MODEL_ID` - Hugging Face model id for Stable Diffusion

@@ -6,9 +6,17 @@ import sys
 import transformers
 
 
-gpt2_pipe = transformers.pipeline('text-generation', model='Gustavosta/MagicPrompt-Stable-Diffusion', tokenizer='gpt2')
+gpt2_pipe = transformers.pipeline(
+    'text-generation',
+    model=config.cfg.prompt_model_id,
+    tokenizer=config.cfg.prompt_model_tokenizer,
+)
+tokenizer = transformers.CLIPTokenizer.from_pretrained(config.cfg.sd_model_id, subfolder='tokenizer')
 used_prompts = []
 
+
+def token_count(prompt):
+    return tokenizer(prompt, return_tensors='pt')['input_ids'].shape[-1]
 
 def generate(starting_text='', max_length=100, random_prompt_probability=config.cfg.random_prompt_probability):
     transformers.set_seed(random.SystemRandom().randint(100, 1000000))
@@ -41,12 +49,13 @@ def generate(starting_text='', max_length=100, random_prompt_probability=config.
             resp = r['generated_text'].strip()
             if resp and resp != starting_text and len(resp) > (len(starting_text) * 2) and not resp.endswith((':', '-', '—')) and not resp.find('--'):
                 continue
-            if not any([i.lower() in resp.lower() for i in ignores]):
+            if not any([i.lower() in resp.lower() for i in ignores]) and token_count(resp) <= 77:
                 responses.append(resp)
         for r in responses:
             response_end = r.strip(string.punctuation)
             response_end = re.sub(r'[^ ]+\.[^ ]+','', response_end)
             response_end = re.sub(r'\(\s*\)','', response_end)
+            response_end = re.sub(r'^\W+|\W+$','', response_end)
             response_end = response_end.replace(',,', ',')
             response_end = response_end.replace('| |', '|')
             response_end = response_end.replace('<', '').replace('>', '')

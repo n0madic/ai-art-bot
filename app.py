@@ -17,7 +17,6 @@ import threading
 import time
 import torch
 import twitter
-import webui
 
 
 @dataclasses.dataclass
@@ -51,6 +50,8 @@ insta_logger = logging.getLogger('instagrapi')
 insta_logger.setLevel(logging.ERROR)
 
 cfg = config.cfg
+
+pipe = diffusion.Pipeline(cfg.sd_model_id, cfg.fp16, cfg.low_vram)
 
 bot = telebot.TeleBot(cfg.telegram_token, parse_mode='HTML')
 bot.add_custom_filter(telebot.custom_filters.ChatFilter())
@@ -167,13 +168,6 @@ def change_config(message):
         setattr(cfg, parameter, value)
         value = getattr(cfg, parameter)
         bot.send_message(message.chat.id, 'Parameter {} changed to {}'.format(parameter, value))
-        if parameter == 'webui':
-            if cfg.webui:
-                _, _, share_url = webui.gr.launch(share=True, prevent_thread_lock=True)
-                bot.send_message(message.chat.id, 'WebUI enabled on {}'.format(share_url))
-            else:
-                webui.gr.close(verbose=True)
-                bot.send_message(message.chat.id, 'WebUI disabled')
     else:
         bot.send_message(message.chat.id, 'Parameter {} not found'.format(parameter))
 
@@ -308,7 +302,7 @@ def main_loop():
         bot_logger.info('Generating image for prompt: {} (seed={} scale={} steps={})'.format(job.prompt, job.seed, job.scale, job.steps))
         if not job.image:
             try:
-                job.image = diffusion.generate(job.prompt, seed=job.seed, scale=job.scale, steps=job.steps)
+                job.image = pipe.generate(job.prompt, seed=job.seed, scale=job.scale, steps=job.steps)
             except IndexError as e:
                 bot_logger.error(e)
                 job.steps += 1
@@ -384,11 +378,9 @@ def main_loop():
 
 
 if __name__ == '__main__':
-    bot_logger.info('Used device: {}'.format(diffusion.device))
+    bot_logger.info('Used device: {}'.format(pipe.device))
     clean_cache()
     user = bot.get_me()
-    if cfg.webui:
-        webui.gr.launch(share=True, prevent_thread_lock=True)
     if cfg.instagram_username and cfg.instagram_password:
         threading.Thread(target=instagram_login).start()
     if len(sys.argv) > 1:
