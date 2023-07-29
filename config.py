@@ -29,9 +29,11 @@ class Config:
         self.premoderation = os.getenv('PREMODERATION', 'false').lower() in ['true', 'on', 'yes', '1']
         self.prompt_model_id = os.getenv('PROMPT_MODEL_ID', 'Gustavosta/MagicPrompt-Stable-Diffusion')
         self.prompt_model_tokenizer = os.getenv('PROMPT_MODEL_TOKENIZER', 'gpt2')
+        self.prompt_prefix = os.getenv('PROMPT_PREFIX')
         self.random_prompt_probability = float(os.getenv('RANDOM_PROMPT_PROBABILITY', 0.5))
         self.realesrgan_model_path = os.getenv('REALESRGAN_MODEL_PATH', 'realesrgan/RealESRGAN_x4plus.pth')
         self.sd_model_id = os.getenv('SD_MODEL_ID', 'stabilityai/stable-diffusion-2-1')
+        self.sd_model_vae_id = os.getenv('SD_MODEL_VAE_ID')
         self.sleep_time = float(os.getenv('SLEEP_TIME', 600))
         self.telegram_token = os.getenv('TELEGRAM_TOKEN')
         telegram_admin_id = os.getenv('TELEGRAM_ADMIN_ID')

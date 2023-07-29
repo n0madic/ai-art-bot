@@ -53,14 +53,18 @@ def generate(starting_text='', max_length=100, random_prompt_probability=config.
                 responses.append(resp)
         for r in responses:
             response_end = r.strip(string.punctuation)
+            response_end = response_end.encode('ascii', 'ignore').decode('ascii')
             response_end = re.sub(r'[^ ]+\.[^ ]+','', response_end)
             response_end = re.sub(r'\(\s*\)','', response_end)
             response_end = re.sub(r'^\W+|\W+$','', response_end)
+            response_end = re.sub(r'!+', '!', response_end)
             response_end = response_end.replace(',,', ',')
             response_end = response_end.replace('| |', '|')
             response_end = response_end.replace('<', '').replace('>', '')
             response_end = response_end.replace('[[', '').replace(']]', '')
             response_end = response_end.replace('((', '').replace('))', '')
+            if config.cfg.prompt_prefix:
+                response_end = config.cfg.prompt_prefix + ', ' + response_end
             response_end = ' '.join(response_end.split()).strip()
             if response_end and len(response_end) > 20:
                 prompt = response_end
