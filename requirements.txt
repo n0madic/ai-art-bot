@@ -5,10 +5,10 @@ gfpgan==v1.3.7
 gradio
 instagrapi>=1.16
 pyTelegramBotAPI
-python-twitter
 realesrgan
 safetensors
 scipy
 transformers
 triton
+tweepy
 xformers

@@ -16,7 +16,7 @@ import textwrap
 import threading
 import time
 import torch
-import twitter
+import tweepy
 
 
 @dataclasses.dataclass
@@ -51,7 +51,7 @@ insta_logger.setLevel(logging.ERROR)
 
 cfg = config.cfg
 
-pipe = diffusion.Pipeline(cfg.sd_model_id, cfg.fp16, cfg.low_vram)
+pipe = diffusion.Pipeline(cfg.sd_model_id, cfg.sd_model_vae_id, cfg.fp16, cfg.low_vram)
 
 bot = telebot.TeleBot(cfg.telegram_token, parse_mode='HTML')
 bot.add_custom_filter(telebot.custom_filters.ChatFilter())
@@ -61,19 +61,21 @@ insta_logged = False
 
 if cfg.twitter_consumer_key and cfg.twitter_consumer_secret and cfg.twitter_access_token and cfg.twitter_access_token_secret:
     try:
-        twitter_api = twitter.Api(consumer_key=cfg.twitter_consumer_key,
-                                  consumer_secret=cfg.twitter_consumer_secret,
-                                  access_token_key=cfg.twitter_access_token,
-                                  access_token_secret=cfg.twitter_access_token_secret,
-                                  sleep_on_rate_limit=True)
-        tw_creds = twitter_api.VerifyCredentials()
+        auth = tweepy.OAuthHandler(cfg.twitter_consumer_key, cfg.twitter_consumer_secret)
+        auth.set_access_token(cfg.twitter_access_token, cfg.twitter_access_token_secret)
+        twitter_api_v1 = tweepy.API(auth)
+        tw_creds = twitter_api_v1.verify_credentials(skip_status=True, include_entities=False)
+        twitter_client = tweepy.Client(
+            consumer_key=cfg.twitter_consumer_key, consumer_secret=cfg.twitter_consumer_secret,
+            access_token=cfg.twitter_access_token, access_token_secret=cfg.twitter_access_token_secret
+        )
     except Exception as e:
         bot_logger.error("Twitter authentication: {}".format(e))
-        twitter_api = None
+        twitter_api_v1 = None
     else:
         bot_logger.info('Logged in Twitter as {}'.format(tw_creds.screen_name))
 else:
-    twitter_api = None
+    twitter_api_v1 = None
 
 worker_queue = queue.Queue()
 
@@ -133,11 +135,12 @@ def twitter_send(image_path, message):
     status = textwrap.shorten(message, width=280, placeholder='...')
     bot_logger.info('Send image to Twitter...')
     try:
-        resp = twitter_api.PostUpdate(status, media=image_path)
+        media = twitter_api_v1.media_upload(image_path)
+        resp = twitter_client.create_tweet(text=status, media_ids=[media.media_id])
     except Exception as e:
         bot_logger.error(e)
     else:
-        bot_logger.info("https://twitter.com/{}/status/{}".format(resp.user.screen_name, resp.id))
+        bot_logger.info("https://twitter.com/{}/status/{}".format(tw_creds.screen_name, resp.data['id']))
         return True
     return False
 
@@ -273,7 +276,7 @@ def callback_query(call):
             bot.answer_callback_query(call.id, 'Posted to Instagram')
         else:
             bot.answer_callback_query(call.id, 'Error posting to Instagram')
-    if twitter_api and (call.data == 'post_to_twitter' or call.data == 'post_to_all'):
+    if twitter_api_v1 and (call.data == 'post_to_twitter' or call.data == 'post_to_all'):
         sended = twitter_send(image_path, call.message.caption)
         if sended:
             bot.answer_callback_query(call.id, 'Posted to Twitter')
@@ -339,7 +342,7 @@ def main_loop():
                     ]
                 if insta_logged:
                     buttons.append(telebot.types.InlineKeyboardButton("Insta", callback_data="post_to_instagram"))
-                if twitter_api:
+                if twitter_api_v1:
                     buttons.append(telebot.types.InlineKeyboardButton("Twtr", callback_data="post_to_twitter"))
                 if len(buttons) > 1:
                     buttons.append(telebot.types.InlineKeyboardButton("ALL", callback_data="post_to_all"))
@@ -367,7 +370,7 @@ def main_loop():
                 message = '{}\nseed: {} | scale: {} | steps: {}\n#aiart #stablediffusion'.format(job.prompt, job.seed, job.scale, job.steps)
                 if not instagram_send(image_path, message):
                     bot_logger.error('Error posting to Instagram')
-            if twitter_api:
+            if twitter_api_v1:
                 if not twitter_send(image_path, job.prompt):
                     bot_logger.error('Error posting to Twitter')
         if not is_admin_chat and not job.message_id:
