@@ -1,4 +1,4 @@
-from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
+from diffusers.models import AutoencoderKL
 from diffusers import StableDiffusionPipeline, EulerAncestralDiscreteScheduler
 from diffusers.utils.import_utils import is_xformers_available
 import logging
@@ -9,26 +9,35 @@ import sys
 import threading
 
 
-# Disable safety checks to allow for NSFW prompts
-StableDiffusionSafetyChecker.forward = lambda self, clip_input, images: (
-    images, False)
-
-
 class Pipeline:
-    '''Wrapper around StableDiffusionPipeline to make it thread-safe'''
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    '''Wrapper around DiffusionPipeline to make it thread-safe'''
+    device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
     lock = threading.Lock()
 
-    def __init__(self, sd_model_id: str, fp16: bool = False, low_vram: bool = False):
+    def __init__(self, sd_model_id, sd_model_vae_id: str, fp16: bool = False, low_vram: bool = False):
         '''Initialize the pipeline'''
+        revision = 'main'
+        torch_dtype = None
         if fp16:
+            revision='fp16'
+            torch_dtype=torch.float16
+        if sd_model_vae_id:
+            self.pipe = StableDiffusionPipeline.from_pretrained(
+                    sd_model_id,
+                    revision=revision,
+                    torch_dtype=torch_dtype,
+                    safety_checker=None,
+                    requires_safety_checker=False,
+                    vae=AutoencoderKL.from_pretrained(sd_model_vae_id)
+                )
+        else:
             self.pipe = StableDiffusionPipeline.from_pretrained(
                 sd_model_id,
-                revision='fp16',
-                torch_dtype=torch.float16,
+                revision=revision,
+                torch_dtype=torch_dtype,
+                safety_checker=None,
+                requires_safety_checker=False
             )
-        else:
-            self.pipe = StableDiffusionPipeline.from_pretrained(sd_model_id)
         if low_vram:
             torch.backends.cudnn.benchmark = True
             torch.backends.cuda.matmul.allow_tf32 = True
@@ -80,7 +89,7 @@ def get_negative_prompt(filename='negative.txt'):
 if __name__ == "__main__":
     import config
 
-    pipe = Pipeline(config.cfg.sd_model_id,
+    pipe = Pipeline(config.cfg.sd_model_id, config.cfg.sd_model_vae_id,
                     config.cfg.fp16, config.cfg.low_vram)
     print(f'Used device: {pipe.device}')
 
@@ -89,7 +98,7 @@ if __name__ == "__main__":
     else:
         prompt = "test"
     print(f'Generating image for prompt: {prompt}')
-    image = pipe.generate(prompt)
+    image = pipe.generate(prompt, steps=20)
     filename = f"{prompt}.png"
     print(f'Saving {filename}...')
     image.save(filename)
