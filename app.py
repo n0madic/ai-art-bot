@@ -51,7 +51,7 @@ insta_logger.setLevel(logging.ERROR)
 
 cfg = config.cfg
 
-pipe = diffusion.Pipeline(cfg.sd_model_id, cfg.sd_model_vae_id, cfg.fp16, cfg.low_vram)
+pipe = diffusion.Pipeline(cfg.sd_model_id, cfg.sd_model_vae_id, cfg.sd_refiner_id, cfg.fp16, cfg.low_vram)
 
 bot = telebot.TeleBot(cfg.telegram_token, parse_mode='HTML')
 bot.add_custom_filter(telebot.custom_filters.ChatFilter())
@@ -314,6 +314,7 @@ def main_loop():
             except RuntimeError as e:
                 bot_logger.error(e)
                 torch.cuda.empty_cache()
+                torch.clear_autocast_cache()
                 worker_queue.put(job)
                 continue
             except Exception as e:
