@@ -32,8 +32,8 @@ class Job:
 
     def __post_init__(self):
         params = {}
-        self.prompt = re.sub(r'(\w+)[:=]\s?(\d+\.\d+)', lambda m: params.update({m.group(1).lower(): float(m.group(2))}) or '', self.prompt)
-        self.prompt = re.sub(r'(\w+)[:=]\s?(\d+)', lambda m: params.update({m.group(1).lower(): int(m.group(2))}) or '', self.prompt)
+        self.prompt = re.sub(r'(scale)[:=]\s?(\d+\.\d+)', lambda m: params.update({m.group(1).lower(): float(m.group(2))}) or '', self.prompt)
+        self.prompt = re.sub(r'(seed|steps)[:=]\s?(\d+)', lambda m: params.update({m.group(1).lower(): int(m.group(2))}) or '', self.prompt)
         self.prompt = re.sub(r'[(|]\s*[)|]','', self.prompt)
         self.prompt = self.prompt.strip()
         if not self.prompt or self.prompt.endswith('+'):
