@@ -3,7 +3,6 @@ diffusers
 ftfy
 gfpgan==v1.3.7
 gradio
-instagrapi>=1.16
 pyTelegramBotAPI
 realesrgan
 safetensors

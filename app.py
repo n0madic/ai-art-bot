@@ -2,7 +2,6 @@ import config
 import dataclasses
 import diffusion
 import enhancement
-import instagrapi
 import logging
 import os
 import prompt
@@ -46,8 +45,6 @@ class Job:
 logging.basicConfig(format='%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 bot_logger = logging.getLogger('bot')
 bot_logger.setLevel(logging.INFO)
-insta_logger = logging.getLogger('instagrapi')
-insta_logger.setLevel(logging.ERROR)
 
 cfg = config.cfg
 
@@ -55,9 +52,6 @@ pipe = diffusion.Pipeline(cfg.sd_model_id, cfg.sd_model_vae_id, cfg.sd_refiner_i
 
 bot = telebot.TeleBot(cfg.telegram_token, parse_mode='HTML')
 bot.add_custom_filter(telebot.custom_filters.ChatFilter())
-
-insta = instagrapi.Client(logger=insta_logger)
-insta_logged = False
 
 if cfg.twitter_consumer_key and cfg.twitter_consumer_secret and cfg.twitter_access_token and cfg.twitter_access_token_secret:
     try:
@@ -88,46 +82,6 @@ def clean_cache(age=86400, interval=3600):
         if os.stat(os.path.join(cfg.image_cache_dir,f)).st_mtime < time.time() - age:
             os.remove(os.path.join(cfg.image_cache_dir,f))
     threading.Timer(interval, clean_cache).start()
-
-
-def instagram_login():
-    global insta_logged
-    attempt_count = 0
-    while not insta_logged:
-        try:
-            insta_logged = insta.login(cfg.instagram_username, cfg.instagram_password)
-        except Exception as e:
-            bot_logger.error(e)
-            attempt_count += 1
-            if attempt_count > 5:
-                attempt_count = 0
-                time.sleep(3600)
-            else:
-                time.sleep(random.randint(60, 600))
-    bot_logger.info('Logged in Instagram as {}'.format(insta.username))
-
-
-def instagram_send(image_path, message):
-    global insta_logged
-    if not insta_logged:
-        return False
-    bot_logger.info('Send image to Instagram...')
-    try:
-        resp = insta.photo_upload(image_path, caption=message)
-    except (instagrapi.exceptions.ChallengeRequired, instagrapi.exceptions.ClientForbiddenError) as e:
-        bot_logger.error(e)
-        insta.logout()
-        insta_logged = False
-        threading.Thread(target=instagram_login).start()
-    except Exception as e:
-        bot_logger.error(e)
-    else:
-        if resp.code:
-            bot_logger.info("https://www.instagram.com/p/{}/".format(resp.code))
-            return True
-        else:
-            bot_logger.error(resp)
-    return False
 
 
 def twitter_send(image_path, message):
@@ -270,12 +224,6 @@ def callback_query(call):
             bot.answer_callback_query(call.id, 'Error posting to channel')
         else:
             sended = True
-    if insta_logged and (call.data == 'post_to_instagram' or call.data == 'post_to_all'):
-        sended = instagram_send(image_path, call.message.caption + '\n#aiart #stablediffusion')
-        if sended:
-            bot.answer_callback_query(call.id, 'Posted to Instagram')
-        else:
-            bot.answer_callback_query(call.id, 'Error posting to Instagram')
     if twitter_api_v1 and (call.data == 'post_to_twitter' or call.data == 'post_to_all'):
         sended = twitter_send(image_path, call.message.caption)
         if sended:
@@ -338,8 +286,6 @@ def main_loop():
                     telebot.types.InlineKeyboardButton("Fix face", callback_data="fix_face"),
                     telebot.types.InlineKeyboardButton("Tg", callback_data="post_to_channel"),
                     ]
-                if insta_logged:
-                    buttons.append(telebot.types.InlineKeyboardButton("Insta", callback_data="post_to_instagram"))
                 if twitter_api_v1:
                     buttons.append(telebot.types.InlineKeyboardButton("Twtr", callback_data="post_to_twitter"))
                 if len(buttons) > 1:
@@ -364,10 +310,6 @@ def main_loop():
                     bot_logger.error(resp)
         if job.message_id and not is_admin_chat and not is_turbo_mode:
             image_path = os.path.join(cfg.image_cache_dir, '{}.jpg'.format(job.message_id))
-            if insta_logged:
-                message = '{}\nseed: {} | scale: {} | steps: {}\n#aiart #stablediffusion'.format(job.prompt, job.seed, job.scale, job.steps)
-                if not instagram_send(image_path, message):
-                    bot_logger.error('Error posting to Instagram')
             if twitter_api_v1:
                 if not twitter_send(image_path, job.prompt):
                     bot_logger.error('Error posting to Twitter')
@@ -382,8 +324,6 @@ if __name__ == '__main__':
     bot_logger.info('Used device: {}'.format(pipe.device))
     clean_cache()
     user = bot.get_me()
-    if cfg.instagram_username and cfg.instagram_password:
-        threading.Thread(target=instagram_login).start()
     if len(sys.argv) > 1:
         worker_queue.put(Job(sys.argv[1], cfg.telegram_chat_id))
     if not cfg.premoderation:

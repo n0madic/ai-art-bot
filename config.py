@@ -21,8 +21,6 @@ class Config:
         self.face_enhancer_arch = os.getenv('FACE_ENHANCER_ARCH', 'CodeFormer')
         self.face_enhancer_model_path = os.getenv('FACE_ENHANCER_MODEL_PATH', 'gfpgan/CodeFormer.pth')
         self.fp16 = os.getenv('FP16', 'false').lower() in ['true', 'on', 'yes', '1']
-        self.instagram_username = os.getenv('INSTAGRAM_USERNAME')
-        self.instagram_password = os.getenv('INSTAGRAM_PASSWORD')
         self.image_cache_dir = os.getenv('IMAGE_CACHE_DIR', 'imagecache')
         self.low_vram = os.getenv('LOW_VRAM', 'false').lower() in ['true', 'on', 'yes', '1']
         self.premoderation = os.getenv('PREMODERATION', 'false').lower() in ['true', 'on', 'yes', '1']

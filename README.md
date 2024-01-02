@@ -11,8 +11,6 @@ Environment variables:
 * `FACE_ENHANCER_MODEL_PATH` - face enhancer model path for GFPGAN
 * `FP16` - Use half-precision model
 * `HUGGING_FACE_HUB_TOKEN` - token for Hugging Face for downloading models
-* `INSTAGRAM_USERNAME` - Instagram username
-* `INSTAGRAM_PASSWORD` - Instagram password
 * `LOW_VRAM` - low video RAM mode
 * `PREMODERATION` - premoderation mode (post only in turbo chat)
 * `PROMPT_MODEL_ID` - Hugging Face model id for prompt
