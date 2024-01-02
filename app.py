@@ -329,10 +329,7 @@ def main_loop():
             if cfg.upscaling:
                 bot_logger.info('Upscaling...')
                 try:
-                    face_restore = enhancement.face_presence_detection(job.image)
-                    if face_restore:
-                        bot_logger.info('Faces detected, restoring...')
-                    job.image = enhancement.upscale(job.image, face_restore=face_restore)
+                    job.image = enhancement.upscale(job.image)
                 except Exception as e:
                     bot_logger.error(e)
             if is_admin_chat or is_turbo_mode:

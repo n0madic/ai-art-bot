@@ -3,21 +3,8 @@ from gfpgan.utils import GFPGANer
 from realesrgan.utils import RealESRGANer
 from PIL import Image
 import config
-import cv2
 import numpy
 import os
-import torch
-
-
-def face_presence_detection(image):
-    if config.cfg.face_restoring:
-        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-        image = numpy.array(image)
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        faces = face_cascade.detectMultiScale(gray, 1.2, 5)
-        return len(faces) > 0
-    else:
-        return False
 
 
 def fixface(image):

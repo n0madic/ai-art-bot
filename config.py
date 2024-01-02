@@ -20,7 +20,6 @@ class Config:
         self.command_only_mode = os.getenv('COMMAND_ONLY_MODE', 'false').lower() in ['true', 'on', 'yes', '1']
         self.face_enhancer_arch = os.getenv('FACE_ENHANCER_ARCH', 'CodeFormer')
         self.face_enhancer_model_path = os.getenv('FACE_ENHANCER_MODEL_PATH', 'gfpgan/CodeFormer.pth')
-        self.face_restoring = os.getenv('FACE_RESTORING', 'false').lower() in ['true', 'on', 'yes', '1']
         self.fp16 = os.getenv('FP16', 'false').lower() in ['true', 'on', 'yes', '1']
         self.instagram_username = os.getenv('INSTAGRAM_USERNAME')
         self.instagram_password = os.getenv('INSTAGRAM_PASSWORD')
