@@ -9,7 +9,6 @@ Environment variables:
 * `COMMAND_ONLY_MODE` - bot command mode only
 * `FACE_ENHANCER_ARCH` - face enhancer architecture
 * `FACE_ENHANCER_MODEL_PATH` - face enhancer model path for GFPGAN
-* `FACE_RESTORING` - restoring faces in an image with [GFPGAN](https://github.com/TencentARC/GFPGAN) (required enabled `UPSCALING`)
 * `FP16` - Use half-precision model
 * `HUGGING_FACE_HUB_TOKEN` - token for Hugging Face for downloading models
 * `INSTAGRAM_USERNAME` - Instagram username
