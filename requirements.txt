@@ -2,7 +2,6 @@ accelerate
 diffusers
 ftfy
 gfpgan==v1.3.7
-gradio
 pyTelegramBotAPI
 realesrgan
 safetensors
