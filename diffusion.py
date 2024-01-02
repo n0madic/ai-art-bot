@@ -67,6 +67,10 @@ class Pipeline:
                 )
         pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(
             pipe.scheduler.config)
+        try:
+            pipe.enable_freeu(s1=0.6, s2=0.4, b1=1.1, b2=1.2)
+        except Exception as e:
+            logging.warning('Could not enable FreeU: {e}')
         if self.low_vram:
             pipe.enable_model_cpu_offload()
         else:
