@@ -30,6 +30,7 @@ Aerial view of a city
 Aesthetically pleasing
 Airship in steel armor
 Alien
+Alien animals
 Alien invasion
 Alien jungle
 Alien planet
@@ -67,6 +68,7 @@ Blizzard game art
 Block city
 Buildings on the shell of a giant turtle
 Bunch of people and cyborgs in a technologically advanced cityscape of the future
+Burning
 Burning city
 Burning house
 Burning house at sunset
@@ -121,6 +123,7 @@ Dark city
 Dark forest
 Desert sunrise
 Desolate wasteland
+Detailed cinematography
 Detailed portrait
 Diablo
 Digital painting of
@@ -131,17 +134,23 @@ Dramatic
 Elegant
 Elven princess
 Epic
+Epic alien landscape
+Epic alien planet
 Epic battle
 Epic fantasy landscape
 Epic horror
+Epic horror scene
+Epic landscape
 Epic scene
 Epic space battle
 Eternity
 Ethernal tresculpture
 Exosuit
 Exoplanet
+Extraterrestrial
 Extraterrestrial civilization
 Extraterrestrial civilization conquers space
+Extraterrestrial creature
 Extraterrestrial landscape
 Extraterrestrial planet
 Extraterrestrial spaceship
@@ -159,8 +168,10 @@ Female portrait
 Field of fireflies
 First contact
 Flower tower
+Flying
 Flying castle in the sky
 Flying island in the sky
+Futuristic
 Futuristic building
 Futuristic city
 Futuristic city in a huge tower in the desert
@@ -190,7 +201,6 @@ Goddess of illusion
 Gorgeous
 Gothic
 Gothic castle
-Grand canyon
 Grand canyon with a river
 Hell
 Hell on earth
@@ -214,7 +224,12 @@ Humanoid robot
 Hut inside the mountains valley
 Hyperrealistic
 Ice planet
-Incredibly monster
+Image that scares you half to death
+Incredible
+Incredible creature
+Incredible detailed
+Incredible landscape
+Incredible monster
 Indigenous village on an alien planet
 Industrial city
 Insect alien
@@ -278,8 +293,10 @@ Nebula
 Niagara falls
 Night motel
 Noah's Ark
+Nuclear
 Nuclear apocalypse
 Nuclear explosion in the city
+Nuclear explosion in the sky above the city
 Nuclear explosions in the city center, aerial view
 Nuclear fallout
 Nuclear power plant
@@ -301,6 +318,7 @@ Paradise in hell
 Paradise island
 Pirate ship enters the bay
 Pirate spaceship
+Planet
 Planet Earth
 Planet Mars
 Planet of the apes
@@ -308,6 +326,7 @@ Planet with a huge volcano
 Plastic bottle filled with magical or fairytale trees
 Portal
 Portal to another world
+Post-apocalyptic
 Post-apocalyptic city
 Post-apocalyptic landscape
 Post-apocalyptic skyscraper
@@ -326,6 +345,7 @@ Ravaged city
 Ravaged city with a huge tower
 Ravaged ship in the ocean
 Realistic
+Realistic render
 River in the jungle
 Scientific illustration
 Sea monster
@@ -344,13 +364,16 @@ Space colony
 Space military base
 Space monster
 Space station in orbit
+Spaceship
 Spaceship in a hangar
 Sparse woods
 Starcraft
+Starship
 Starship crashed on an alien planet
 Starship entering hyperspace
 Starship interior
 Starship lands on the surface of the planet
+Steampunk
 Steampunk city
 Steampunk factory
 Stunning
@@ -375,7 +398,10 @@ The forest of the dead
 The last man on earth
 The Last of Us
 The Legend of Zelda
+The most
+The most amazing
 The most beautiful
+The most dramatic scene
 The view from the bridge of a starship cockpit
 The world of the future
 Throne room
