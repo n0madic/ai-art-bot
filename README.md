@@ -17,6 +17,7 @@ Environment variables:
 * `PROMPT_MODEL_TOKENIZER` - Hugging Face model tokenizer for prompt
 * `RANDOM_PROMPT_PROBABILITY` - probability of generate full random prompt without ideas (default `0.5`)
 * `REALESRGAN_MODEL_PATH` - model path for RealESRGAN
+* `RESOLUTION` - image resolution (default `512x512`)
 * `SD_MODEL_ID` - Hugging Face model id for Stable Diffusion
 * `SLEEP_TIME` - how many seconds to sleep between generations (default 600s)
 * `TELEGRAM_TOKEN` - Telegram bot token

@@ -29,6 +29,7 @@ class Config:
         self.prompt_prefix = os.getenv('PROMPT_PREFIX')
         self.random_prompt_probability = float(os.getenv('RANDOM_PROMPT_PROBABILITY', 0.5))
         self.realesrgan_model_path = os.getenv('REALESRGAN_MODEL_PATH', 'realesrgan/RealESRGAN_x4plus.pth')
+        self.image_width, self.image_height = [int(i) for i in os.getenv('RESOLUTION', '512x512').lower().split('x')]
         self.sd_model_id = os.getenv('SD_MODEL_ID', 'stabilityai/stable-diffusion-2-1')
         self.sd_model_vae_id = os.getenv('SD_MODEL_VAE_ID')
         self.sd_refiner_id = os.getenv('SD_REFINER_ID')

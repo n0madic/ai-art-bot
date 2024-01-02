@@ -105,7 +105,7 @@ class Pipeline:
         self.unload_pipe()
         self.unload_refiner()
 
-    def generate(self, prompt, negative_prompt='', seed=0, scale=7.5, steps=50):
+    def generate(self, prompt, negative_prompt='', seed=0, scale=7.5, steps=50, width=512, height=512):
         '''Generate an image for the given prompt'''
         if not hasattr(self, 'pipe'):
             self.load_pipe()
@@ -125,7 +125,9 @@ class Pipeline:
                 num_inference_steps=steps,
                 guidance_scale=scale,
                 output_type=output_type,
-                generator=generator
+                generator=generator,
+                width=width,
+                height=height,
             ).images[0]
             if self.sd_refiner_id:
                 if self.low_vram:
@@ -138,7 +140,9 @@ class Pipeline:
                     negative_prompt=negative_prompt,
                     num_inference_steps=steps,
                     guidance_scale=scale,
-                    generator=generator
+                    generator=generator,
+                    width=width,
+                    height=height,
                 ).images[0]
         finally:
             if self.low_vram:

@@ -253,7 +253,13 @@ def main_loop():
         bot_logger.info('Generating image for prompt: {} (seed={} scale={} steps={})'.format(job.prompt, job.seed, job.scale, job.steps))
         if not job.image:
             try:
-                job.image = pipe.generate(job.prompt, seed=job.seed, scale=job.scale, steps=job.steps)
+                job.image = pipe.generate(job.prompt,
+                                          seed=job.seed,
+                                          scale=job.scale,
+                                          steps=job.steps,
+                                          width=cfg.image_width,
+                                          height=cfg.image_height,
+                                          )
             except IndexError as e:
                 bot_logger.error(e)
                 job.steps += 1
