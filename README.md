@@ -19,6 +19,8 @@ Environment variables:
 * `REALESRGAN_MODEL_PATH` - model path for RealESRGAN
 * `RESOLUTION` - image resolution (default `512x512`)
 * `SD_MODEL_ID` - Hugging Face model id for Stable Diffusion
+* `SD_MODEL_VAE_ID` - Hugging Face model id for Stable Diffusion VAE
+* `SD_REFINER_ID` - Hugging Face model id for Stable Diffusion XL Refiner
 * `SLEEP_TIME` - how many seconds to sleep between generations (default 600s)
 * `TELEGRAM_TOKEN` - Telegram bot token
 * `TELEGRAM_ADMIN_ID` - user ID to manage the bot

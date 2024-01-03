@@ -12,9 +12,6 @@ import threading
 
 class Pipeline:
     '''Wrapper around DiffusionPipeline to make it thread-safe'''
-    device = torch.device('cuda' if torch.cuda.is_available(
-    ) else 'mps' if torch.backends.mps.is_available() else 'cpu')
-    lock = threading.Lock()
 
     def __init__(self,
                  sd_model_id: str,
@@ -23,6 +20,9 @@ class Pipeline:
                  fp16: bool = False,
                  low_vram: bool = False,
                  ):
+        self.device = torch.device('cuda' if torch.cuda.is_available(
+        ) else 'mps' if torch.backends.mps.is_available() else 'cpu')
+        self.lock = threading.Lock()
         self.sd_model_id = sd_model_id
         self.sd_refiner_id = sd_refiner_id
         self.sd_model_vae_id = sd_model_vae_id
@@ -43,8 +43,6 @@ class Pipeline:
                 model_id,
                 variant=self.variant,
                 torch_dtype=self.torch_dtype,
-                safety_checker=None,
-                requires_safety_checker=False,
                 vae=AutoencoderKL.from_pretrained(self.sd_model_vae_id)
             )
         else:
@@ -52,8 +50,6 @@ class Pipeline:
                 model_id,
                 variant=self.variant,
                 torch_dtype=self.torch_dtype,
-                safety_checker=None,
-                requires_safety_checker=False
             )
         if self.low_vram:
             pipe.enable_attention_slicing()
@@ -117,8 +113,7 @@ class Pipeline:
             output_type = 'latent'
         try:
             self.lock.acquire()
-            generator = torch.Generator(
-                device=self.device).manual_seed(int(seed))
+            generator = torch.Generator(device=self.device).manual_seed(int(seed))
             image = self.pipe(
                 prompt,
                 negative_prompt=negative_prompt,
