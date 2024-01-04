@@ -51,8 +51,6 @@ class Pipeline:
                 variant=self.variant,
                 torch_dtype=self.torch_dtype,
             )
-        if self.low_vram:
-            pipe.enable_attention_slicing()
         if is_xformers_available():
             try:
                 pipe.enable_xformers_memory_efficient_attention()
@@ -61,6 +59,8 @@ class Pipeline:
                     'Could not enable memory efficient attention. Make sure xformers is installed'
                     ' correctly and a GPU is available: {e}'
                 )
+        elif self.low_vram:
+            pipe.enable_attention_slicing()
         pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(
             pipe.scheduler.config)
         try:
