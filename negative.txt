@@ -13,6 +13,7 @@ missing legs
 monochrome
 out of frame
 poorly drawn face
+render
 signature
 text
 tiling
